@@ -1,0 +1,16 @@
+[
+{
+  "modid": "paintedbiomes",
+  "name": "Painted Biomes",
+  "description": "Generates the world's biomes based on a template image",
+  "version": "${mod_version}",
+  "mcversion": "${minecraft_version}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["masa"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
