@@ -14,6 +14,7 @@ public class Configs
     private Configuration conf;
     private File configFile;
     public boolean useCustomMappings;
+    public String imagePath;
 
     public Configs(File file)
     {
@@ -23,6 +24,8 @@ public class Configs
 
     public void loadConfigs()
     {
+        this.imagePath = "paintedbiomes/";
+
         this.conf = new Configuration(this.configFile);
         Property prop;
         String category = "Generic";

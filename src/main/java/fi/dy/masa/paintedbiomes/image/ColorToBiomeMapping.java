@@ -37,7 +37,7 @@ public class ColorToBiomeMapping
     {
         if (this.useCustomMappings == true)
         {
-            Integer colorInt = Integer.valueOf(color);
+            Integer colorInt = Integer.valueOf(color & 0x00FFFFFF);
             if (this.customMappings.containsKey(colorInt) == true)
             {
                 return this.customMappings.get(colorInt);

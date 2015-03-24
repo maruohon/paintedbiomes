@@ -12,6 +12,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.event.BiomeEvents;
+import fi.dy.masa.paintedbiomes.image.ImageCache;
 import fi.dy.masa.paintedbiomes.proxy.IProxy;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 
@@ -43,5 +44,6 @@ public class PaintedBiomes
 
         // Load the configs later in the init cycle so that the Biome mods have a chance to register their biomes first
         Configs.instance.loadConfigs();
+        new ImageCache();
     }
 }
