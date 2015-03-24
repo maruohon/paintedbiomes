@@ -1,7 +1,5 @@
 package fi.dy.masa.paintedbiomes.proxy;
 
-import net.minecraftforge.common.DimensionManager;
-import fi.dy.masa.paintedbiomes.world.WorldProviderPaintedBiomes;
 import fi.dy.masa.paintedbiomes.world.WorldTypePaintedBiomes;
 
 public class CommonProxy implements IProxy
@@ -10,10 +8,10 @@ public class CommonProxy implements IProxy
     public void registerProvider()
     {
         // Unregister previous provider
-        DimensionManager.unregisterProviderType(0);
+        //DimensionManager.unregisterProviderType(0);
 
         // Register our own provider
-        DimensionManager.registerProviderType(0, WorldProviderPaintedBiomes.class, true);
+        //DimensionManager.registerProviderType(0, WorldProviderPaintedBiomes.class, true);
     }
 
     @Override
