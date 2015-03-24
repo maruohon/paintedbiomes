@@ -18,18 +18,7 @@ public class WorldTypePaintedBiomes extends WorldType
     public WorldChunkManager getChunkManager(World world)
     {
         return new WorldChunkManagerPaintedBiomes(world);
-        //return new WorldChunkManager(world);
-        //return new WorldChunkManagerHell(BiomeGenBase.hell, 0.0F);
     }
-
-    /*@Override
-    public GenLayer getBiomeLayer(long worldSeed, GenLayer parentLayer)
-    {
-        GenLayer ret = new GenLayerBiome(200L, parentLayer, this);
-        ret = GenLayerZoom.magnify(1000L, ret, 2);
-        ret = new GenLayerBiomeEdge(1000L, ret);
-        return ret;
-    }*/
 
     /*@Override
     public IChunkProvider getChunkGenerator(World world, String generatorOptions)

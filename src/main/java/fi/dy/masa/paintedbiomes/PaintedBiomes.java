@@ -10,6 +10,7 @@ import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.event.BiomeEvents;
 import fi.dy.masa.paintedbiomes.proxy.IProxy;
 import fi.dy.masa.paintedbiomes.reference.Reference;
@@ -24,14 +25,13 @@ public class PaintedBiomes
     public static IProxy proxy;
 
     public static Logger logger;
-    public static String configDirPath;
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         instance = this;
         logger = event.getModLog();
-        configDirPath = event.getModConfigurationDirectory().getAbsolutePath().concat("/" + Reference.MOD_ID);
+        new Configs(event.getSuggestedConfigurationFile());
     }
 
     @EventHandler
@@ -40,15 +40,8 @@ public class PaintedBiomes
         MinecraftForge.EVENT_BUS.register(new BiomeEvents());
         proxy.createWorldType();
         proxy.registerProvider();
-    }
 
-    /*@EventHandler
-    public void postInit(FMLPostInitializationEvent event)
-    {
+        // Load the configs later in the init cycle so that the Biome mods have a chance to register their biomes first
+        Configs.instance.loadConfigs();
     }
-
-    @EventHandler
-    public void serverStarting(FMLServerStartingEvent event)
-    {
-    }*/
 }

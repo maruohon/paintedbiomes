@@ -14,6 +14,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     @Override
     public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] biomes, int x, int z, int width, int length, boolean cacheFlag)
     {
+        // Get cached biomes
         if (cacheFlag && width == 16 && length == 16 && (x & 15) == 0 && (z & 15) == 0)
         {
             return super.getBiomeGenAt(biomes, x, z, width, length, cacheFlag);
