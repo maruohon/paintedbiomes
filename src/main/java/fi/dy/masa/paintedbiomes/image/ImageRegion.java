@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
+
 public class ImageRegion
 {
     public int imageX;
@@ -30,7 +32,7 @@ public class ImageRegion
         catch (IOException e)
         {
             this.imageData = null;
-            //PaintedBiomes.logger.warn("Failed to read image template from '" + imageFile.getAbsolutePath() + "'");
+            PaintedBiomes.logger.warn("Failed to read image template from '" + imageFile.getAbsolutePath() + "'");
         }
     }
 
@@ -46,13 +48,8 @@ public class ImageRegion
 
     public int getColorForCoords(int blockX, int blockZ)
     {
-        blockX %= 512;
-        blockZ %= 512;
-
-        if (this.isValidLocation(blockX, blockZ) == false)
-        {
-            return 0;
-        }
+        blockX = (blockX % 512 + 512) % 512;
+        blockZ = (blockZ % 512 + 512) % 512;
 
         return this.imageData.getRGB(blockX, blockZ);
     }

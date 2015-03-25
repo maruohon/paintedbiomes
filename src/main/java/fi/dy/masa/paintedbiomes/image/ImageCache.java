@@ -25,13 +25,16 @@ public class ImageCache
     public ImageRegion getImageRegion(int blockX, int blockZ)
     {
         RegionCoords rc = RegionCoords.fromBlockCoords(blockX, blockZ);
-        if (this.imageMap.containsKey(rc) == false)
+        ImageRegion imageRegion = this.imageMap.get(rc);
+
+        if (imageRegion == null)
         {
             //System.out.println("new ImageRegion(" + rc.regionX + ", " + rc.regionZ + ")");
-            this.imageMap.put(rc, new ImageRegion(rc.regionX, rc.regionZ, Configs.instance.imagePath));
+            imageRegion = new ImageRegion(rc.regionX, rc.regionZ, Configs.instance.imagePath);
+            this.imageMap.put(rc, imageRegion);
         }
 
-        return this.imageMap.get(rc);
+        return imageRegion;
     }
 
     public void loadRange(int blockX, int blockZ, int width, int length)

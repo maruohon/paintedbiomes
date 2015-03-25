@@ -42,6 +42,7 @@ public class ColorToBiomeMapping
             {
                 return this.customMappings.get(colorInt);
             }
+            // TODO: return a default here, like Ocean
         }
 
         // Default mapping: use the value of the blue channel as the Biome ID
