@@ -35,7 +35,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     }
 
     @Override
-    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int x, int z, int width, int length)
+    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int quadrupleChunkX, int quadrupleChunkZ, int width, int length)
     {
         IntCache.resetIntCache();
 
@@ -45,19 +45,21 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
             biomes = new BiomeGenBase[len];
         }
 
-        int endX = x + width;
-        int endZ = z + length;
-        int[] aint = this.genBiomes.getInts(x, z, width, length);
+        int endX = quadrupleChunkX + width;
+        int endZ = quadrupleChunkZ + length;
+        int[] aint = this.genBiomes.getInts(quadrupleChunkX, quadrupleChunkZ, width, length);
 
-        for (int i = 0, bz = z; bz < endZ; ++bz)
+        for (int i = 0, qcz = quadrupleChunkZ; qcz < endZ; ++qcz)
         {
-            for (int bx = x; bx < endX; ++bx)
+            for (int qcx = quadrupleChunkX; qcx < endX; ++qcx)
             {
-                ImageRegion ir = ImageCache.instance.getImageRegion(bx, bz);
+                int blockX = qcx << 2;
+                int blockZ = qcz << 2;
+                ImageRegion ir = ImageCache.instance.getImageRegion(blockX, blockZ);
                 // If the requested location is mapped on a template image
-                if (ir.isValidLocation(bx, bz) == true)
+                if (ir.isValidLocation(blockX, blockZ) == true)
                 {
-                    int color = ir.getColorForCoords(bx, bz);
+                    int color = ir.getColorForCoords(blockX, blockZ);
                     biomes[i] = ColorToBiomeMapping.instance.getBiomeForColor(color);
                     //System.out.println("ir.getColorForCoords(" + bx + ", " + bz + "): " + String.format("0x%08X", color) + " biome: " + (biomes[i] != null ? biomes[i].biomeName : "null"));
                     if (biomes[i] == null)
