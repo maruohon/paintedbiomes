@@ -63,18 +63,18 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
                     if (biomes[i] == null)
                     {
                         //biomes[i] = BiomeGenBase.getBiome(aint[i]);
-                        //System.out.println("getBiomeForColor(): null");
+                        //System.out.println("getBiomesForGeneration(): getBiomeForColor(): null");
                         biomes[i] = BiomeGenBase.frozenOcean;
                     }
                 }
                 else
                 {
                     biomes[i] = BiomeGenBase.getBiome(aint[i]);
-                    /*if (biomes[i] == null)
+                    if (biomes[i] == null)
                     {
-                        System.out.println("getInts(): null");
+                        System.out.println("getBiomesForGeneration(): getInts(): null");
                     }
-                    biomes[i] = BiomeGenBase.frozenOcean;*/
+                    biomes[i] = BiomeGenBase.frozenOcean;
                 }
 
                 i++;
@@ -159,7 +159,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         return biomes;
     }
 
-    @Override
+    /*@Override
     public float[] getRainfall(float[] rainfall, int x, int z, int width, int length)
     {
         int len = width * length;
@@ -171,7 +171,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         // TODO
 
         return rainfall;
-    }
+    }*/
 
     // TODO
     /*@Override

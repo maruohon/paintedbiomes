@@ -29,7 +29,6 @@ public class ImageCache
 
         if (imageRegion == null)
         {
-            //System.out.println("new ImageRegion(" + rc.regionX + ", " + rc.regionZ + ")");
             imageRegion = new ImageRegion(rc.regionX, rc.regionZ, Configs.instance.imagePath);
             this.imageMap.put(rc, imageRegion);
         }
@@ -37,12 +36,12 @@ public class ImageCache
         return imageRegion;
     }
 
-    public void loadRange(int blockX, int blockZ, int width, int length)
+    /*public void loadRange(int blockX, int blockZ, int width, int length)
     {
-        int startX = blockX >> 9;
-        int endX = (blockX + width) >> 9;
-        int startZ = blockZ >> 9;
-        int endZ = (blockZ + length) >> 9;
+        int startX = blockX / 512;
+        int endX = (blockX + width) / 512;
+        int startZ = blockZ / 512;
+        int endZ = (blockZ + length) / 512;
 
         for (int rx = startX; rx <= endX; ++rx)
         {
@@ -55,5 +54,5 @@ public class ImageCache
                 }
             }
         }
-    }
+    }*/
 }

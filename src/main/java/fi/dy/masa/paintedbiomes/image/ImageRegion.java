@@ -28,6 +28,11 @@ public class ImageRegion
             {
                 this.imageData = ImageIO.read(imageFile);
             }
+            else
+            {
+                this.imageData = null;
+                PaintedBiomes.logger.warn("Failed to read image template from '" + imageFile.getAbsolutePath() + "'");
+            }
         }
         catch (IOException e)
         {
@@ -38,6 +43,9 @@ public class ImageRegion
 
     public boolean isValidLocation(int blockX, int blockZ)
     {
+        blockX = (blockX % 512 + 512) % 512;
+        blockZ = (blockZ % 512 + 512) % 512;
+
         if (this.imageData == null || blockX >= this.imageData.getWidth() || blockZ >= this.imageData.getHeight())
         {
             return false;
