@@ -5,21 +5,16 @@ public class RegionCoords
     public final int regionX;
     public final int regionZ;
 
-    public RegionCoords(int x, int z)
+    public RegionCoords(int regionX, int regionZ)
     {
-        this.regionX = x;
-        this.regionZ = z;
+        this.regionX = regionX;
+        this.regionZ = regionZ;
     }
 
-    public static RegionCoords fromBlockCoords(int x, int z)
+    public static RegionCoords fromBlockCoords(int blockX, int blockZ)
     {
-        return new RegionCoords(x >> 9, z >> 9);
+        return new RegionCoords(blockX >> 9, blockZ >> 9);
     }
-
-    /*public boolean equals(RegionCoords other)
-    {
-        return this.regionX == other.regionX && this.regionZ == other.regionZ;
-    }*/
 
     @Override
     public int hashCode()
@@ -28,6 +23,7 @@ public class RegionCoords
         int result = 1;
         result = prime * result + regionX;
         result = prime * result + regionZ;
+
         return result;
     }
 
@@ -36,7 +32,7 @@ public class RegionCoords
     {
         if (this == obj) return true;
         if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
+        if (this.getClass() != obj.getClass()) return false;
         RegionCoords other = (RegionCoords) obj;
         if (regionX != other.regionX) return false;
         if (regionZ != other.regionZ) return false;

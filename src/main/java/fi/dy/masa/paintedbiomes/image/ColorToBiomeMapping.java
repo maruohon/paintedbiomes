@@ -8,7 +8,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 public class ColorToBiomeMapping
 {
     public static ColorToBiomeMapping instance;
-    /** Mapping from an ARGB color value to a Biome ID */
+    /** Mapping from an RGB color value to a Biome ID */
     public Map<Integer, BiomeGenBase> customMappings;
     public boolean useCustomMappings;
 
