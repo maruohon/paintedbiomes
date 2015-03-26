@@ -6,12 +6,11 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.WorldChunkManager;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
-import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
-import fi.dy.masa.paintedbiomes.image.ImageCache;
-import fi.dy.masa.paintedbiomes.image.ImageRegion;
+import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
 public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
 {
+    private World world;
     private GenLayer genBiomes;
     /** A GenLayer containing the indices into BiomeGenBase.biomeList[] */
     private GenLayer biomeIndexLayer;
@@ -21,6 +20,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     public WorldChunkManagerPaintedBiomes(World world)
     {
         super(world);
+        this.world = world;
         this.biomeCache = new BiomeCache(this);
         GenLayer[] agenlayer = GenLayer.initializeAllBiomeGenerators(world.getSeed(), world.getWorldInfo().getTerrainType());
         agenlayer = getModdedBiomeGenerators(world.getWorldInfo().getTerrainType(), world.getSeed(), agenlayer);
@@ -53,32 +53,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         {
             for (int qcx = quadrupleChunkX; qcx < endX; ++qcx)
             {
-                int blockX = qcx << 2;
-                int blockZ = qcz << 2;
-                ImageRegion ir = ImageCache.instance.getImageRegion(blockX, blockZ);
-                // If the requested location is mapped on a template image
-                if (ir.isValidLocation(blockX, blockZ) == true)
-                {
-                    int color = ir.getColorForCoords(blockX, blockZ);
-                    biomes[i] = ColorToBiomeMapping.instance.getBiomeForColor(color);
-                    //System.out.println("ir.getColorForCoords(" + bx + ", " + bz + "): " + String.format("0x%08X", color) + " biome: " + (biomes[i] != null ? biomes[i].biomeName : "null"));
-                    if (biomes[i] == null)
-                    {
-                        //biomes[i] = BiomeGenBase.getBiome(aint[i]);
-                        //System.out.println("getBiomesForGeneration(): getBiomeForColor(): null");
-                        biomes[i] = BiomeGenBase.frozenOcean;
-                    }
-                }
-                else
-                {
-                    biomes[i] = BiomeGenBase.getBiome(aint[i]);
-                    if (biomes[i] == null)
-                    {
-                        System.out.println("getBiomesForGeneration(): getInts(): null");
-                    }
-                    biomes[i] = BiomeGenBase.frozenOcean;
-                }
-
+                biomes[i] = this.getBiomeAt(qcx << 2, qcz << 2, BiomeGenBase.getBiome(aint[i]));
                 i++;
             }
         }
@@ -97,13 +72,6 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     {
         IntCache.resetIntCache();
 
-        /*Iterator<Entry<Integer, BiomeGenBase>> iter = ColorToBiomeMapping.instance.customMappings.entrySet().iterator();
-        while (iter.hasNext())
-        {
-            Entry<Integer, BiomeGenBase> entry = iter.next();
-            System.out.println("key: " + String.format("0x%08X", entry.getKey()) + " value: " + (entry.getValue() != null ? entry.getValue().biomeName : "null"));
-        }*/
-
         int len = width * length;
         if (biomes == null || biomes.length < len)
         {
@@ -119,8 +87,6 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         }
         else
         {
-            //ImageCache.instance.loadRange(x, z, width, length);
-
             int endX = x + width;
             int endZ = z + length;
             int[] aint = this.biomeIndexLayer.getInts(x, z, width, length);
@@ -129,36 +95,18 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
             {
                 for (int bx = x; bx < endX; ++bx)
                 {
-                    ImageRegion ir = ImageCache.instance.getImageRegion(bx, bz);
-                    // If the requested location is mapped on a template image
-                    if (ir.isValidLocation(bx, bz) == true)
-                    {
-                        int color = ir.getColorForCoords(bx, bz);
-                        biomes[i] = ColorToBiomeMapping.instance.getBiomeForColor(color);
-                        //System.out.println("ir.getColorForCoords(" + bx + ", " + bz + "): " + String.format("0x%08X", color) + " biome: " + (biomes[i] != null ? biomes[i].biomeName : "null"));
-                        if (biomes[i] == null)
-                        {
-                            //biomes[i] = BiomeGenBase.getBiome(aint[i]);
-                            System.out.println("getBiomeForColor(): null");
-                            biomes[i] = BiomeGenBase.frozenOcean;
-                        }
-                    }
-                    else
-                    {
-                        biomes[i] = BiomeGenBase.getBiome(aint[i]);
-                        if (biomes[i] == null)
-                        {
-                            System.out.println("getInts(): null");
-                        }
-                        biomes[i] = BiomeGenBase.frozenOcean;
-                    }
-
+                    biomes[i] = this.getBiomeAt(bx, bz, BiomeGenBase.getBiome(aint[i]));
                     i++;
                 }
             }
         }
 
         return biomes;
+    }
+
+    private BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase biome)
+    {
+        return ImageHandler.getImageHandler(this.world.provider.dimensionId).getBiomeAt(blockX, blockZ, biome);
     }
 
     /*@Override

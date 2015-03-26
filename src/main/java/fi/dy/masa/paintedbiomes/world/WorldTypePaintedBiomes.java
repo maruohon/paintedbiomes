@@ -6,12 +6,15 @@ import net.minecraft.world.biome.WorldChunkManager;
 
 public class WorldTypePaintedBiomes extends WorldType
 {
-    public static WorldType instance;
+    public static final WorldType PAINTEDBIOMES = new WorldTypePaintedBiomes("PAINTEDBIOMES");
 
-    public WorldTypePaintedBiomes()
+    public WorldTypePaintedBiomes(String name)
     {
-        super("PAINTEDBIOMES");
-        instance = this;
+        super(name);
+    }
+
+    public static void init()
+    {
     }
 
     @Override
@@ -19,11 +22,4 @@ public class WorldTypePaintedBiomes extends WorldType
     {
         return new WorldChunkManagerPaintedBiomes(world);
     }
-
-    /*@Override
-    public IChunkProvider getChunkGenerator(World world, String generatorOptions)
-    {
-        //return new ChunkProviderFlat(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
-        return (this == FLAT ? new ChunkProviderFlat(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions) : new ChunkProviderGenerate(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled()));
-    }*/
 }

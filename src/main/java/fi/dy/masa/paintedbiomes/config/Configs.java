@@ -6,14 +6,14 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 
 public class Configs
 {
-    public static Configs instance;
+    private static Configs instance;
     private Configuration conf;
     private File configFile;
-    public String imagePath; // TODO remove this
 
     public int templateAlignmentMode;
     public int templateAlignmentX;
@@ -30,16 +30,21 @@ public class Configs
         this.configFile = file;
     }
 
+    public static Configs getInstance()
+    {
+        return instance;
+    }
+
     public void loadConfigs()
     {
-        this.imagePath = "paintedbiomes/";
+        PaintedBiomes.logger.info("Loading configuration...");
 
         this.conf = new Configuration(this.configFile);
         Property prop;
 
         String category = "Generic";
 
-        prop = this.conf.get(category, "unpaintedAreaBiome", -1);
+        prop = this.conf.get(category, "unpaintedAreaBiomeID", -1);
         prop.comment = "What to do with the areas outside the template image(s). -1 = use the biome from regular world generation, 0..255 = the biome ID to use";
         this.unpaintedAreaBiome = this.checkAndFixValueInt(prop, -1, 255, -1);
 
@@ -61,7 +66,7 @@ public class Configs
         prop.comment = "The world Z coordinate where the selected point (templateAlignmentMode) of the template image is aligned.";
         this.templateAlignmentZ = prop.getInt();
 
-        prop = this.conf.get(category, "templateUndefinedAreaBiome", -1);
+        prop = this.conf.get(category, "templateUndefinedAreaBiomeID", -1);
         prop.comment = "What to do with the undefined (= completely transparent) areas _inside the template image_. -1 = use the biome from regular world generation, 0..255 = the biome ID to use";
         this.templateUndefinedAreaBiome = this.checkAndFixValueInt(prop, -1, 255, -1);
 

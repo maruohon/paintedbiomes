@@ -7,7 +7,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 
 public class ColorToBiomeMapping
 {
-    public static ColorToBiomeMapping instance;
+    private static ColorToBiomeMapping instance;
     /** Mapping from an RGB color value to a Biome ID */
     public Map<Integer, BiomeGenBase> customMappings;
     public boolean useCustomMappings;
@@ -16,6 +16,11 @@ public class ColorToBiomeMapping
     {
         instance = this;
         this.clearCustomMappings();
+    }
+
+    public static ColorToBiomeMapping getInstance()
+    {
+        return instance;
     }
 
     public void setUseCustomMappings(boolean value)
@@ -37,15 +42,10 @@ public class ColorToBiomeMapping
     {
         if (this.useCustomMappings == true)
         {
-            Integer colorInt = Integer.valueOf(color & 0x00FFFFFF);
-            if (this.customMappings.containsKey(colorInt) == true)
-            {
-                return this.customMappings.get(colorInt);
-            }
-            // TODO: return a default here, like Ocean
+            return this.customMappings.get(Integer.valueOf(color & 0x00FFFFFF));
         }
 
-        // Default mapping: use the value of the blue channel as the Biome ID
+        // Default mapping: use the value of the blue channel as the BiomeID
         return BiomeGenBase.getBiome(color & 0x000000FF);
     }
 }

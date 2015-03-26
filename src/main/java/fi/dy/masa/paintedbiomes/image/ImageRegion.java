@@ -6,59 +6,129 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import net.minecraft.world.biome.BiomeGenBase;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
+import fi.dy.masa.paintedbiomes.config.Configs;
 
-public class ImageRegion
+public class ImageRegion implements IImageReader
 {
-    public int imageX;
-    public int imageZ;
-    public BufferedImage imageData;
-    public String name;
+    private ColorToBiomeMapping colorToBiome;
+    private String name;
+    private File imageFile;
+
+    private BufferedImage imageData;
+    private int imageWidth;
+    private int imageHeight;
+
+    private int unpaintedAreaBiomeID;
+    private int templateUndefinedAreaBiomeID;
+    private BiomeGenBase unpaintedAreaBiome;
+    private BiomeGenBase templateUndefinedAreaBiome;
 
     public ImageRegion(int regionX, int regionZ, String path)
     {
-        this.imageX = regionX;
-        this.imageZ = regionZ;
-        this.name = "r." + regionX + "." + regionZ + ".png";
-        File imageFile = new File(path, this.name);
+        this.name = "r." + regionX + "." + regionZ;
+        this.imageFile = new File(path, this.name + ".png");
+        this.colorToBiome = ColorToBiomeMapping.getInstance();
+
+        this.readImageTemplate(this.imageFile);
+        this.setBiomeHandling();
+    }
+
+    public void readImageTemplate(File imageFile)
+    {
+        this.imageData = null;
 
         try
         {
             if (imageFile.exists() == true)
             {
                 this.imageData = ImageIO.read(imageFile);
+
+                if (this.imageData != null)
+                {
+                    this.imageWidth = this.imageData.getWidth();
+                    this.imageHeight = this.imageData.getHeight();
+                    //PaintedBiomes.logger.info("Successfully read image template for region '" + this.name + "' from '" + imageFile.getAbsolutePath() + "'");
+
+                    return;
+                }
             }
-            else
-            {
-                this.imageData = null;
-                PaintedBiomes.logger.warn("Failed to read image template from '" + imageFile.getAbsolutePath() + "'");
-            }
+
+            //PaintedBiomes.logger.warn("Failed to read image template for region '" + this.name + "' from '" + imageFile.getAbsolutePath() + "'");
         }
         catch (IOException e)
         {
-            this.imageData = null;
-            PaintedBiomes.logger.warn("Failed to read image template from '" + imageFile.getAbsolutePath() + "'");
+            //PaintedBiomes.logger.warn("Failed to read image template for region '" + this.name + "' from '" + imageFile.getAbsolutePath() + "'");
         }
     }
 
-    public boolean isValidLocation(int blockX, int blockZ)
+    public void setBiomeHandling()
     {
-        blockX = (blockX % 512 + 512) % 512;
-        blockZ = (blockZ % 512 + 512) % 512;
+        this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
+        this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
 
-        if (this.imageData == null || blockX >= this.imageData.getWidth() || blockZ >= this.imageData.getHeight())
+        if (this.unpaintedAreaBiomeID >= 0 && this.unpaintedAreaBiomeID <= 255)
         {
-            return false;
+            this.unpaintedAreaBiome = BiomeGenBase.getBiome(this.unpaintedAreaBiomeID);
         }
 
-        return true;
+        if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
+        {
+            this.templateUndefinedAreaBiome = BiomeGenBase.getBiome(this.templateUndefinedAreaBiomeID);
+        }
     }
 
-    public int getColorForCoords(int blockX, int blockZ)
+    @Override
+    public boolean areCoordinatesInsideTemplate(int blockX, int blockZ)
     {
         blockX = (blockX % 512 + 512) % 512;
         blockZ = (blockZ % 512 + 512) % 512;
+        //System.out.println("areCoordinatesInsideTemplate(): " + (this.imageData != null && blockX < this.imageWidth && blockZ < this.imageHeight));
+        return this.imageData != null && blockX < this.imageWidth && blockZ < this.imageHeight;
+    }
 
-        return this.imageData.getRGB(blockX, blockZ);
+    @Override
+    public BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase defaultBiome)
+    {
+        if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
+        {
+            // Default biome defined for areas outside of the template image
+            if (this.unpaintedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
+            {
+                return this.unpaintedAreaBiome;
+            }
+
+            return defaultBiome;
+        }
+
+        //System.out.println("ImageRegion.getBiomeAt(" + blockX + ", " + blockZ + ")");
+        int x = (blockX % 512 + 512) % 512;
+        int y = (blockZ % 512 + 512) % 512;
+
+        BiomeGenBase biome = this.colorToBiome.getBiomeForColor(this.imageData.getRGB(x, y));
+        int[] alpha = new int[1];
+        try
+        {
+            this.imageData.getAlphaRaster().getPixel(x, y, alpha);
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            PaintedBiomes.logger.fatal("Error reading the alpha channel of the template image");
+        }
+
+        // Completely transparent pixel or undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (alpha[0] == 0x00 || biome == null)
+        {
+            // Default biome defined for transparent areas
+            if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
+            {
+                return this.templateUndefinedAreaBiome;
+            }
+
+            return defaultBiome;
+        }
+
+        return biome;
     }
 }

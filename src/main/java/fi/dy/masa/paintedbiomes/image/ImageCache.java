@@ -1,58 +1,58 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.util.RegionCoords;
 
 public class ImageCache
 {
-    public static ImageCache instance;
-    public Map<RegionCoords, ImageRegion> imageMap;
+    private Map<RegionCoords, IImageReader> imageRegions;
+    private Map<RegionCoords, Long> timeouts;
 
     public ImageCache()
     {
-        instance = this;
-        this.imageMap = new HashMap<RegionCoords, ImageRegion>();
+        this.imageRegions = new HashMap<RegionCoords, IImageReader>();
+        this.timeouts = new HashMap<RegionCoords, Long>();
     }
 
     public boolean contains(int blockX, int blockZ)
     {
-        return this.imageMap.containsKey(RegionCoords.fromBlockCoords(blockX, blockZ));
+        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(blockX, blockZ));
     }
 
-    public ImageRegion getImageRegion(int blockX, int blockZ)
+    public IImageReader getRegionImage(int blockX, int blockZ, String path)
     {
-        RegionCoords rc = RegionCoords.fromBlockCoords(blockX, blockZ);
-        ImageRegion imageRegion = this.imageMap.get(rc);
+        RegionCoords regionCoords = RegionCoords.fromBlockCoords(blockX, blockZ);
+        IImageReader imageRegion = this.imageRegions.get(regionCoords);
 
         if (imageRegion == null)
         {
-            imageRegion = new ImageRegion(rc.regionX, rc.regionZ, Configs.instance.imagePath);
-            this.imageMap.put(rc, imageRegion);
+            imageRegion = new ImageRegion(regionCoords.regionX, regionCoords.regionZ, path);
+            this.imageRegions.put(regionCoords, imageRegion);
         }
+
+        this.timeouts.put(regionCoords, Long.valueOf(System.currentTimeMillis()));
 
         return imageRegion;
     }
 
-    /*public void loadRange(int blockX, int blockZ, int width, int length)
+    public void removeOld(int thresholdSeconds)
     {
-        int startX = blockX / 512;
-        int endX = (blockX + width) / 512;
-        int startZ = blockZ / 512;
-        int endZ = (blockZ + length) / 512;
+        long currentTime = System.currentTimeMillis();
+        Iterator<Entry<RegionCoords, Long>> iter = this.timeouts.entrySet().iterator();
 
-        for (int rx = startX; rx <= endX; ++rx)
+        while (iter.hasNext() == true)
         {
-            for (int rz = startZ; rz <= endZ; ++rz)
+            Entry<RegionCoords, Long> entry = iter.next();
+
+            if (currentTime - entry.getValue().longValue() >= (thresholdSeconds * 1000))
             {
-                RegionCoords rc = RegionCoords.fromBlockCoords(rx, rz);
-                if (this.imageMap.containsKey(rc) == false)
-                {
-                    this.imageMap.put(rc, new ImageRegion(rx, rz, Configs.instance.imagePath));
-                }
+                this.imageRegions.remove(entry.getKey());
+                iter.remove();
             }
         }
-    }*/
+    }
 }
