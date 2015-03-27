@@ -40,6 +40,7 @@ public class Configs
         PaintedBiomes.logger.info("Loading configuration...");
 
         this.conf = new Configuration(this.configFile);
+        this.conf.load();
         Property prop;
 
         String category = "Generic";
