@@ -20,7 +20,8 @@ public class ImageHandler implements IImageReader
 
     public ImageHandler(int dimension)
     {
-        File file = new File(templateBasePath, "DIM" + dimension);
+        //File file = new File(templateBasePath, "DIM" + dimension);
+        File file = new File(templateBasePath);
         if (file.exists() == false)
         {
             file.mkdirs();
