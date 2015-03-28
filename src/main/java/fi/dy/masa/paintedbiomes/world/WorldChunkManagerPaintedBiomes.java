@@ -1,20 +1,11 @@
 package fi.dy.masa.paintedbiomes.world;
 
-import net.minecraft.world.World;
-import net.minecraft.world.biome.BiomeCache;
-import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.WorldChunkManager;
-import net.minecraft.world.gen.layer.GenLayer;
-import net.minecraft.world.gen.layer.IntCache;
-import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
-public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
+public class WorldChunkManagerPaintedBiomes// extends WorldChunkManager
 {
-    private World world;
+    /*private World world;
     private GenLayer genBiomes;
-    /** A GenLayer containing the indices into BiomeGenBase.biomeList[] */
     private GenLayer biomeIndexLayer;
-    /** The BiomeCache object for this world. */
     private BiomeCache biomeCache;
 
     public WorldChunkManagerPaintedBiomes(World world)
@@ -109,6 +100,12 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         return BiomeGenBase.getBiome(ImageHandler.getImageHandler(this.world.provider.dimensionId).getBiomeIDAt(blockX, blockZ, defaultBiomeID));
     }
 
+    @Override
+    public void cleanupCache()
+    {
+        this.biomeCache.cleanupCache();
+    }*/
+
     /*@Override
     public float[] getRainfall(float[] rainfall, int x, int z, int width, int length)
     {
@@ -134,10 +131,4 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     public ChunkPosition findBiomePosition(int x, int z, int r, List list, Random rand)
     {
     }*/
-
-    @Override
-    public void cleanupCache()
-    {
-        this.biomeCache.cleanupCache();
-    }
 }
