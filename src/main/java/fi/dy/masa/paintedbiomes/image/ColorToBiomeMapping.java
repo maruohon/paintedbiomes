@@ -1,16 +1,13 @@
 package fi.dy.masa.paintedbiomes.image;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import net.minecraft.world.biome.BiomeGenBase;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class ColorToBiomeMapping
 {
     private static ColorToBiomeMapping instance;
     /** Mapping from an RGB color value to a Biome ID */
-    public Map<Integer, BiomeGenBase> customMappings;
-    public boolean useCustomMappings;
+    private TIntObjectHashMap<Integer> customMappings;
+    private boolean useCustomMappings;
 
     public ColorToBiomeMapping()
     {
@@ -30,22 +27,24 @@ public class ColorToBiomeMapping
 
     public void clearCustomMappings()
     {
-        customMappings = new HashMap<Integer, BiomeGenBase>();
+        this.customMappings = new TIntObjectHashMap<Integer>();
     }
 
-    public void addCustomMapping(int color, BiomeGenBase biome)
+    public void addCustomMapping(int color, int biomeID)
     {
-        this.customMappings.put(Integer.valueOf(color), biome);
+        this.customMappings.put(color & 0x00FFFFFF, biomeID);
     }
 
-    public BiomeGenBase getBiomeForColor(int color)
+    public int getBiomeIDForColor(int color)
     {
         if (this.useCustomMappings == true)
         {
-            return this.customMappings.get(Integer.valueOf(color & 0x00FFFFFF));
+            Integer biomeID = this.customMappings.get(color & 0x00FFFFFF);
+
+            return (biomeID != null ? biomeID.intValue() : -1);
         }
 
         // Default mapping: use the value of the blue channel as the BiomeID
-        return BiomeGenBase.getBiome(color & 0x000000FF);
+        return color & 0x000000FF;
     }
 }

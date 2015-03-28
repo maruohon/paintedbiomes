@@ -107,11 +107,11 @@ public class Configs
                 {
                     prop = configCategory.get(biome.biomeName);
 
-                    int val = Integer.parseInt(prop.getString(), 16);
+                    int color = Integer.parseInt(prop.getString(), 16);
                     // Don't add color mappings as custom mappings if they are just the default mapping from blue channel to BiomeID
-                    if (val != biome.biomeID)
+                    if (color != biome.biomeID)
                     {
-                        colorToBiomeMapping.addCustomMapping(val, biome);
+                        colorToBiomeMapping.addCustomMapping(color, biome.biomeID);
                     }
                 }
                 // No mapping found, add the default mapping from the BiomeID to blue channel, so that all the existing biomes will get added to the config

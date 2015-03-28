@@ -22,13 +22,19 @@ public class PaintedBiomesEventHandler
     {
         //ImageHandler.setTemplateBasePath(new File(FMLCommonHandler.instance().getMinecraftServerInstance().getEntityWorld().getSaveHandler().getWorldDirectory(), Reference.MOD_ID).getAbsolutePath());
 
-        // Re-initialize the ImageHandler after a world loads, to update the possibly changed configs and template images
-        ImageHandler.getImageHandler(event.world.provider.dimensionId).init();
+        if (event.world.isRemote == false)
+        {
+            // Re-initialize the ImageHandler after a world loads, to update the possibly changed configs and template images
+            ImageHandler.getImageHandler(event.world.provider.dimensionId).init();
+        }
     }
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
-        ImageHandler.removeImageHandler(event.world.provider.dimensionId);
+        if (event.world.isRemote == false)
+        {
+            ImageHandler.removeImageHandler(event.world.provider.dimensionId);
+        }
     }
 }

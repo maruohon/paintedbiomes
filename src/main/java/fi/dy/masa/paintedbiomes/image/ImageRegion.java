@@ -13,7 +13,6 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageRegion implements IImageReader
 {
-    private ColorToBiomeMapping colorToBiome;
     private String name;
     private File imageFile;
 
@@ -23,14 +22,11 @@ public class ImageRegion implements IImageReader
 
     private int unpaintedAreaBiomeID;
     private int templateUndefinedAreaBiomeID;
-    private BiomeGenBase unpaintedAreaBiome;
-    private BiomeGenBase templateUndefinedAreaBiome;
 
     public ImageRegion(int regionX, int regionZ, String path)
     {
         this.name = "r." + regionX + "." + regionZ;
         this.imageFile = new File(path, this.name + ".png");
-        this.colorToBiome = ColorToBiomeMapping.getInstance();
 
         this.readImageTemplate(this.imageFile);
         this.setBiomeHandling();
@@ -68,16 +64,6 @@ public class ImageRegion implements IImageReader
     {
         this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
-
-        if (this.unpaintedAreaBiomeID >= 0 && this.unpaintedAreaBiomeID <= 255)
-        {
-            this.unpaintedAreaBiome = BiomeGenBase.getBiome(this.unpaintedAreaBiomeID);
-        }
-
-        if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
-        {
-            this.templateUndefinedAreaBiome = BiomeGenBase.getBiome(this.templateUndefinedAreaBiomeID);
-        }
     }
 
     @Override
@@ -85,29 +71,30 @@ public class ImageRegion implements IImageReader
     {
         blockX = (blockX % 512 + 512) % 512;
         blockZ = (blockZ % 512 + 512) % 512;
-        //System.out.println("areCoordinatesInsideTemplate(): " + (this.imageData != null && blockX < this.imageWidth && blockZ < this.imageHeight));
+
         return this.imageData != null && blockX < this.imageWidth && blockZ < this.imageHeight;
     }
 
     @Override
-    public BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase defaultBiome)
+    public BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
         {
             // Default biome defined for areas outside of the template image
             if (this.unpaintedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
             {
-                return this.unpaintedAreaBiome;
+                return BiomeGenBase.getBiome(this.unpaintedAreaBiomeID);
             }
 
-            return defaultBiome;
+            return BiomeGenBase.getBiome(defaultBiomeID);
         }
 
         //System.out.println("ImageRegion.getBiomeAt(" + blockX + ", " + blockZ + ")");
         int x = (blockX % 512 + 512) % 512;
         int y = (blockZ % 512 + 512) % 512;
 
-        BiomeGenBase biome = this.colorToBiome.getBiomeForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
+
         int[] alpha = new int[1];
         try
         {
@@ -127,17 +114,17 @@ public class ImageRegion implements IImageReader
         }
 
         // Completely transparent pixel or undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (alpha[0] == 0x00 || biome == null)
+        if (alpha[0] == 0x00 || biomeID == -1)
         {
             // Default biome defined for transparent areas
             if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
             {
-                return this.templateUndefinedAreaBiome;
+                return BiomeGenBase.getBiome(this.templateUndefinedAreaBiomeID);
             }
 
-            return defaultBiome;
+            return BiomeGenBase.getBiome(defaultBiomeID);
         }
 
-        return biome;
+        return BiomeGenBase.getBiome(biomeID);
     }
 }

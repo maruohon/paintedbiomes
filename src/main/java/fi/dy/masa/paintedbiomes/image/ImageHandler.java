@@ -104,13 +104,13 @@ public class ImageHandler implements IImageReader
     }
 
     @Override
-    public BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase defaultBiome)
+    public BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.useSingleTemplateImage == true)
         {
-            return this.singleImage.getBiomeAt(blockX, blockZ, defaultBiome);
+            return this.singleImage.getBiomeAt(blockX, blockZ, defaultBiomeID);
         }
 
-        return this.regionImageCache.getRegionImage(blockX, blockZ, this.templatePath).getBiomeAt(blockX, blockZ, defaultBiome);
+        return this.regionImageCache.getRegionImage(blockX, blockZ, this.templatePath).getBiomeAt(blockX, blockZ, defaultBiomeID);
     }
 }

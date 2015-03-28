@@ -53,7 +53,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         {
             for (int qcx = quadrupleChunkX; qcx < endX; ++qcx)
             {
-                biomes[i] = this.getBiomeAt(qcx << 2, qcz << 2, BiomeGenBase.getBiome(aint[i]));
+                biomes[i] = this.getBiomeAt(qcx << 2, qcz << 2, aint[i]);
                 i++;
             }
         }
@@ -95,7 +95,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
             {
                 for (int bx = x; bx < endX; ++bx)
                 {
-                    biomes[i] = this.getBiomeAt(bx, bz, BiomeGenBase.getBiome(aint[i]));
+                    biomes[i] = this.getBiomeAt(bx, bz, aint[i]);
                     i++;
                 }
             }
@@ -104,9 +104,9 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         return biomes;
     }
 
-    private BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase biome)
+    private BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
     {
-        return ImageHandler.getImageHandler(this.world.provider.dimensionId).getBiomeAt(blockX, blockZ, biome);
+        return ImageHandler.getImageHandler(this.world.provider.dimensionId).getBiomeAt(blockX, blockZ, defaultBiomeID);
     }
 
     /*@Override

@@ -18,5 +18,5 @@ public interface IImageReader
      * 
      * @return The BiomeGenBase to be used for the world generation
      */
-    public BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase defaultBiome);
+    public BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID);
 }

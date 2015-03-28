@@ -13,7 +13,6 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle implements IImageReader
 {
-    private ColorToBiomeMapping colorToBiome;
     private File imageFile;
     private BufferedImage imageData;
     private int imageWidth;
@@ -25,8 +24,6 @@ public class ImageSingle implements IImageReader
 
     private int unpaintedAreaBiomeID;
     private int templateUndefinedAreaBiomeID;
-    private BiomeGenBase unpaintedAreaBiome;
-    private BiomeGenBase templateUndefinedAreaBiome;
 
     private int minX;
     private int maxX;
@@ -36,7 +33,6 @@ public class ImageSingle implements IImageReader
     public ImageSingle(File imageFile)
     {
         this.imageFile = imageFile;
-        this.colorToBiome = ColorToBiomeMapping.getInstance();
         this.reload();
     }
 
@@ -127,16 +123,6 @@ public class ImageSingle implements IImageReader
     {
         this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
-
-        if (this.unpaintedAreaBiomeID >= 0 && this.unpaintedAreaBiomeID <= 255)
-        {
-            this.unpaintedAreaBiome = BiomeGenBase.getBiome(this.unpaintedAreaBiomeID);
-        }
-
-        if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
-        {
-            this.templateUndefinedAreaBiome = BiomeGenBase.getBiome(this.templateUndefinedAreaBiomeID);
-        }
     }
 
     @Override
@@ -146,23 +132,23 @@ public class ImageSingle implements IImageReader
     }
 
     @Override
-    public BiomeGenBase getBiomeAt(int blockX, int blockZ, BiomeGenBase defaultBiome)
+    public BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
         {
             // Default biome defined for areas outside of the template image
             if (this.unpaintedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
             {
-                return this.unpaintedAreaBiome;
+                return BiomeGenBase.getBiome(this.unpaintedAreaBiomeID);
             }
 
-            return defaultBiome;
+            return BiomeGenBase.getBiome(defaultBiomeID);
         }
 
         int x = blockX - this.minX;
         int y = blockZ - this.minZ;
 
-        BiomeGenBase biome = this.colorToBiome.getBiomeForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
 
         int[] alpha = new int[1];
         try
@@ -183,17 +169,17 @@ public class ImageSingle implements IImageReader
         }
 
         // Completely transparent pixel or undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (alpha[0] == 0x00 || biome == null)
+        if (alpha[0] == 0x00 || biomeID == -1)
         {
             // Default biome defined for transparent areas
             if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
             {
-                return this.templateUndefinedAreaBiome;
+                return BiomeGenBase.getBiome(this.templateUndefinedAreaBiomeID);
             }
 
-            return defaultBiome;
+            return BiomeGenBase.getBiome(defaultBiomeID);
         }
 
-        return biome;
+        return BiomeGenBase.getBiome(biomeID);
     }
 }
