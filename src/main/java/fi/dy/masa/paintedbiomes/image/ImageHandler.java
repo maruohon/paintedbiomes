@@ -29,8 +29,6 @@ public class ImageHandler implements IImageReader
         }
 
         this.templatePath = file.getAbsolutePath();
-
-        this.init();
         imageHandlers.put(dimension, this);
     }
 
