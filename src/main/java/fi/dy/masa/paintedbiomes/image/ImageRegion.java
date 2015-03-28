@@ -1,6 +1,7 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 
@@ -110,7 +111,15 @@ public class ImageRegion implements IImageReader
         int[] alpha = new int[1];
         try
         {
-            this.imageData.getAlphaRaster().getPixel(x, y, alpha);
+            WritableRaster raster = this.imageData.getAlphaRaster();
+            if (raster != null)
+            {
+                raster.getPixel(x, y, alpha);
+            }
+            else
+            {
+                alpha[0] = 0xFF;
+            }
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
