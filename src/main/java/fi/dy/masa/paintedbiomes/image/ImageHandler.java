@@ -1,14 +1,12 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import fi.dy.masa.paintedbiomes.config.Configs;
-import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 
 import net.minecraft.world.biome.BiomeGenBase;
-import cpw.mods.fml.common.FMLCommonHandler;
 
 public class ImageHandler implements IImageReader
 {
@@ -52,9 +50,9 @@ public class ImageHandler implements IImageReader
         imageHandlers.remove(dimension);
     }
 
-    public static void setTemplateBasePath()
+    public static void setTemplateBasePath(String path)
     {
-        templateBasePath = new File(FMLCommonHandler.instance().getMinecraftServerInstance().getEntityWorld().getSaveHandler().getWorldDirectory(), Reference.MOD_ID).getAbsolutePath();
+        templateBasePath = path;
     }
 
     public void init()

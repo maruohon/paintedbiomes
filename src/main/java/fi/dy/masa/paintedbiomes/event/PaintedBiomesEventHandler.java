@@ -20,7 +20,7 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        ImageHandler.setTemplateBasePath();
+        //ImageHandler.setTemplateBasePath(new File(FMLCommonHandler.instance().getMinecraftServerInstance().getEntityWorld().getSaveHandler().getWorldDirectory(), Reference.MOD_ID).getAbsolutePath());
 
         // Re-initialize the ImageHandler after a world loads, to update the possibly changed configs and template images
         ImageHandler.getImageHandler(event.world.provider.dimensionId).init();

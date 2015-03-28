@@ -1,5 +1,7 @@
 package fi.dy.masa.paintedbiomes;
 
+import java.io.File;
+
 import net.minecraftforge.common.MinecraftForge;
 
 import org.apache.logging.log4j.Logger;
@@ -13,6 +15,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.event.PaintedBiomesEventHandler;
+import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import fi.dy.masa.paintedbiomes.world.WorldTypePaintedBiomes;
 
@@ -33,6 +36,7 @@ public class PaintedBiomes
         instance = this;
         logger = event.getModLog();
         Configs.init(event.getSuggestedConfigurationFile());
+        ImageHandler.setTemplateBasePath(new File(event.getModConfigurationDirectory(), Reference.MOD_ID).getAbsolutePath());
     }
 
     @EventHandler
