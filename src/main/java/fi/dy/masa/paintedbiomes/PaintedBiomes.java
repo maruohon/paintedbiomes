@@ -32,7 +32,7 @@ public class PaintedBiomes
     {
         instance = this;
         logger = event.getModLog();
-        new Configs(event.getSuggestedConfigurationFile());
+        Configs.init(event.getSuggestedConfigurationFile());
     }
 
     @EventHandler

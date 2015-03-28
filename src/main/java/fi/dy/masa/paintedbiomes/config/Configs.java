@@ -26,8 +26,12 @@ public class Configs
 
     public Configs(File file)
     {
-        instance = this;
         this.configFile = file;
+    }
+
+    public static void init(File file)
+    {
+        instance = new Configs(file);
     }
 
     public static Configs getInstance()
@@ -97,10 +101,13 @@ public class Configs
         {
             if (biome != null)
             {
+                Property prop;
                 // Mapping found in the config
                 if (configCategory.containsKey(biome.biomeName) == true)
                 {
-                    int val = Integer.parseInt(configCategory.get(biome.biomeName).getString(), 16);
+                    prop = configCategory.get(biome.biomeName);
+
+                    int val = Integer.parseInt(prop.getString(), 16);
                     // Don't add color mappings as custom mappings if they are just the default mapping from blue channel to BiomeID
                     if (val != biome.biomeID)
                     {
@@ -110,8 +117,26 @@ public class Configs
                 // No mapping found, add the default mapping from the BiomeID to blue channel, so that all the existing biomes will get added to the config
                 else
                 {
-                    configCategory.put(biome.biomeName, new Property(biome.biomeName, String.format("%06X", biome.biomeID), Property.Type.STRING));
+                    if (this.useCustomColorMappings == true)
+                    {
+                        int colorValue = biome.biomeID;
+                        Integer color = DefaultColorMappings.getBiomeColor(biome.biomeName);
+                        if (color != null)
+                        {
+                            colorValue = color.intValue();
+                        }
+
+                        prop = new Property(biome.biomeName, String.format("%06X", colorValue), Property.Type.STRING);
+                    }
+                    else
+                    {
+                        prop = new Property(biome.biomeName, String.format("%06X", biome.biomeID), Property.Type.STRING);
+                    }
                 }
+
+                // Update the comment, in case the biome ID has been changed since the config was first generated
+                prop.comment = "Biome name: " + biome.biomeName + ", Biome ID: " + biome.biomeID;
+                configCategory.put(biome.biomeName, prop);
             }
         }
     }
