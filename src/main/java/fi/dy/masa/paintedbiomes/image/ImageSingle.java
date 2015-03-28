@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
-import net.minecraft.world.biome.BiomeGenBase;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
@@ -132,17 +131,17 @@ public class ImageSingle implements IImageReader
     }
 
     @Override
-    public BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
+    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
         {
             // Default biome defined for areas outside of the template image
             if (this.unpaintedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
             {
-                return BiomeGenBase.getBiome(this.unpaintedAreaBiomeID);
+                return this.unpaintedAreaBiomeID;
             }
 
-            return BiomeGenBase.getBiome(defaultBiomeID);
+            return defaultBiomeID;
         }
 
         int x = blockX - this.minX;
@@ -174,12 +173,12 @@ public class ImageSingle implements IImageReader
             // Default biome defined for transparent areas
             if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
             {
-                return BiomeGenBase.getBiome(this.templateUndefinedAreaBiomeID);
+                return this.templateUndefinedAreaBiomeID;
             }
 
-            return BiomeGenBase.getBiome(defaultBiomeID);
+            return defaultBiomeID;
         }
 
-        return BiomeGenBase.getBiome(biomeID);
+        return biomeID;
     }
 }

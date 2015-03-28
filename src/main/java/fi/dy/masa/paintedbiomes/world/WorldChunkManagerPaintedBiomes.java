@@ -106,7 +106,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
 
     private BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
     {
-        return ImageHandler.getImageHandler(this.world.provider.dimensionId).getBiomeAt(blockX, blockZ, defaultBiomeID);
+        return BiomeGenBase.getBiome(ImageHandler.getImageHandler(this.world.provider.dimensionId).getBiomeIDAt(blockX, blockZ, defaultBiomeID));
     }
 
     /*@Override

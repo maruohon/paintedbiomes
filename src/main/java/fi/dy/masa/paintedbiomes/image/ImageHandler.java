@@ -6,8 +6,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 
-import net.minecraft.world.biome.BiomeGenBase;
-
 public class ImageHandler implements IImageReader
 {
     private static TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
@@ -102,13 +100,13 @@ public class ImageHandler implements IImageReader
     }
 
     @Override
-    public BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
+    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.useSingleTemplateImage == true)
         {
-            return this.singleImage.getBiomeAt(blockX, blockZ, defaultBiomeID);
+            return this.singleImage.getBiomeIDAt(blockX, blockZ, defaultBiomeID);
         }
 
-        return this.regionImageCache.getRegionImage(blockX, blockZ, this.templatePath).getBiomeAt(blockX, blockZ, defaultBiomeID);
+        return this.regionImageCache.getRegionImage(blockX, blockZ, this.templatePath).getBiomeIDAt(blockX, blockZ, defaultBiomeID);
     }
 }

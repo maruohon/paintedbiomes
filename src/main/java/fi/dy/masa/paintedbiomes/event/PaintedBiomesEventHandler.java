@@ -1,10 +1,12 @@
 package fi.dy.masa.paintedbiomes.event;
 
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 
 public class PaintedBiomesEventHandler
 {
@@ -17,7 +19,7 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
         //ImageHandler.setTemplateBasePath(new File(FMLCommonHandler.instance().getMinecraftServerInstance().getEntityWorld().getSaveHandler().getWorldDirectory(), Reference.MOD_ID).getAbsolutePath());
@@ -36,5 +38,15 @@ public class PaintedBiomesEventHandler
         {
             ImageHandler.removeImageHandler(event.world.provider.dimensionId);
         }
+    }*/
+
+    @SubscribeEvent
+    public void onInitBiomeGen(WorldTypeEvent.InitBiomeGens event)
+    {
+        //PaintedBiomes.logger.info("InitBiomeGensEvent");
+        ImageHandler.getImageHandler(0).init();
+        event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType);
+        event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType);
+        event.newBiomeGens[2] = event.newBiomeGens[0];
     }
 }

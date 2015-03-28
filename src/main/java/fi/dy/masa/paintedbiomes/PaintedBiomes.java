@@ -17,7 +17,6 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.event.PaintedBiomesEventHandler;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
-import fi.dy.masa.paintedbiomes.world.WorldTypePaintedBiomes;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION, acceptableRemoteVersions="*")
 public class PaintedBiomes
@@ -45,11 +44,11 @@ public class PaintedBiomes
         // Load the configs later in the init cycle so that the Biome mods have a chance to register their biomes first
         Configs.getInstance().loadConfigs();
 
-        //MinecraftForge.TERRAIN_GEN_BUS.register(new BiomeEvents());
         PaintedBiomesEventHandler handler = new PaintedBiomesEventHandler();
-        MinecraftForge.EVENT_BUS.register(handler);
+        MinecraftForge.TERRAIN_GEN_BUS.register(handler);
         FMLCommonHandler.instance().bus().register(handler);
-        WorldTypePaintedBiomes.init();
+        //MinecraftForge.EVENT_BUS.register(handler);
+        //WorldTypePaintedBiomes.init();
     }
 
     @EventHandler
