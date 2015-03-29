@@ -99,45 +99,52 @@ public class Configs
         BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
         for (BiomeGenBase biome : biomes)
         {
-            if (biome != null)
+            if (biome == null)
             {
-                Property prop;
-                // Mapping found in the config
-                if (configCategory.containsKey(biome.biomeName) == true)
-                {
-                    prop = configCategory.get(biome.biomeName);
+                continue;
+            }
 
-                    int color = Integer.parseInt(prop.getString(), 16);
-                    // Don't add color mappings as custom mappings if they are just the default mapping from blue channel to BiomeID
-                    if (color != biome.biomeID)
+            int color = biome.biomeID;
+            Property prop;
+
+            // Mapping found in the config
+            if (configCategory.containsKey(biome.biomeName) == true)
+            {
+                prop = configCategory.get(biome.biomeName);
+
+                try
+                {
+                    color = Integer.parseInt(prop.getString(), 16);
+                }
+                catch (NumberFormatException e)
+                {
+                    PaintedBiomes.logger.warn("Failed to parse color value '" + prop.getString() + "' for biome '" + biome.biomeName);
+                }
+            }
+            // No mapping found, add a default mapping, so that all the existing biomes will get added to the config
+            else
+            {
+                if (this.useCustomColorMappings == true)
+                {
+                    Integer colorInteger = DefaultColorMappings.getBiomeColor(biome.biomeName);
+                    if (colorInteger != null)
                     {
-                        colorToBiomeMapping.addCustomMapping(color, biome.biomeID);
+                        color = colorInteger.intValue();
                     }
                 }
-                // No mapping found, add the default mapping from the BiomeID to blue channel, so that all the existing biomes will get added to the config
-                else
-                {
-                    if (this.useCustomColorMappings == true)
-                    {
-                        int colorValue = biome.biomeID;
-                        Integer color = DefaultColorMappings.getBiomeColor(biome.biomeName);
-                        if (color != null)
-                        {
-                            colorValue = color.intValue();
-                        }
 
-                        prop = new Property(biome.biomeName, String.format("%06X", colorValue), Property.Type.STRING);
-                    }
-                    else
-                    {
-                        prop = new Property(biome.biomeName, String.format("%06X", biome.biomeID), Property.Type.STRING);
-                    }
-                }
-
-                // Update the comment, in case the biome ID has been changed since the config was first generated
-                prop.comment = "Biome name: " + biome.biomeName + ", Biome ID: " + biome.biomeID;
+                prop = new Property(biome.biomeName, String.format("%06X", color), Property.Type.STRING);
                 configCategory.put(biome.biomeName, prop);
             }
+
+            // Don't add color mappings as custom mappings if they are just the default mapping from blue channel to BiomeID
+            if (this.useCustomColorMappings == true && color != biome.biomeID)
+            {
+                colorToBiomeMapping.addCustomMapping(color, biome.biomeID);
+            }
+
+            // Update the comment, in case the biome ID has been changed since the config was first generated
+            prop.comment = "Biome name: " + biome.biomeName + ", Biome ID: " + biome.biomeID;
         }
     }
 
