@@ -1,6 +1,7 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
+import net.minecraft.world.biome.BiomeGenBase;
 
 public class ColorToBiomeMapping
 {
@@ -37,14 +38,22 @@ public class ColorToBiomeMapping
 
     public int getBiomeIDForColor(int color)
     {
+        int biomeID = -1;
+
         if (this.useCustomMappings == true)
         {
-            Integer biomeID = this.customMappings.get(color & 0x00FFFFFF);
-
-            return (biomeID != null ? biomeID.intValue() : -1);
+            Integer biomeInteger = this.customMappings.get(color & 0x00FFFFFF);
+            if (biomeInteger != null)
+            {
+                biomeID = biomeInteger.intValue();
+            }
+        }
+        else
+        {
+            // Default mapping: use the value of the blue channel as the BiomeID
+            biomeID = color & 0x000000FF;
         }
 
-        // Default mapping: use the value of the blue channel as the BiomeID
-        return color & 0x000000FF;
+        return (BiomeGenBase.getBiome(biomeID) != null ? biomeID : -1);
     }
 }
