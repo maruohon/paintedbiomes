@@ -53,7 +53,7 @@ public class Configs
         prop.comment = "What to do with the areas outside the template image(s). -1 = use the biome from regular world generation, 0..255 = the biome ID to use";
         this.unpaintedAreaBiome = this.checkAndFixValueInt(prop, -1, 255, -1);
 
-        prop = this.conf.get(category, "useCustomColorMappings", false);
+        prop = this.conf.get(category, "useCustomColorMappings", true);
         prop.comment = "Whether to use custom assigned colors for biomes. false = blue channel value defines the biome ID (0-255), true = the entire RGB value (excluding alpha!) is used and mapped to the biome.";
         this.useCustomColorMappings = prop.getBoolean();
 
@@ -75,7 +75,7 @@ public class Configs
         prop.comment = "What to do with the undefined (= completely transparent) areas _inside the template image_. -1 = use the biome from regular world generation, 0..255 = the biome ID to use";
         this.templateUndefinedAreaBiome = this.checkAndFixValueInt(prop, -1, 255, -1);
 
-        prop = this.conf.get(category, "useSingleTemplateImage", false);
+        prop = this.conf.get(category, "useSingleTemplateImage", true);
         prop.comment = "true = Use only one image template. false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
         this.useSingleTemplateImage = prop.getBoolean();
 
