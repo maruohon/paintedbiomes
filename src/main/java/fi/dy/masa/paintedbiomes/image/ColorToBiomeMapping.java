@@ -54,6 +54,7 @@ public class ColorToBiomeMapping
             biomeID = color & 0x000000FF;
         }
 
-        return (BiomeGenBase.getBiome(biomeID) != null ? biomeID : -1);
+        BiomeGenBase[] biomeGenBaseArray = BiomeGenBase.getBiomeGenArray();
+        return (biomeGenBaseArray != null && biomeID >= 0 && biomeID < biomeGenBaseArray.length && biomeGenBaseArray[biomeID] != null ? biomeID : -1);
     }
 }
