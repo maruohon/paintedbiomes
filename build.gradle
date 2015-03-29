@@ -30,12 +30,20 @@ archivesBaseName = config.mod_id
 
 minecraft {
     version = config.minecraft_version + "-" + config.forge_version
-    assetDir = "eclipse/assets"
+    runDir = "eclipse/assets"
+
+    // the mappings can be changed at any time, and must be in the following format.
+    // snapshot_YYYYMMDD   snapshot are built nightly.
+    // stable_#            stables are built at the discretion of the MCP team.
+    // Use non-default mappings at your own risk. they may not allways work.
+    // simply re-run your setup task after changing the mappings to update your workspace.
+    //mappings = "snapshot_20141130"
+    mappings = "snapshot_20150130"
 
     ext.mod_version = "${config.mod_version}"
 
     if (mod_version.endsWith('-dev')) {
-        mod_version = mod_version + "-" + new Date().format('yyyy-MM-dd_HH-mm-ss')
+        mod_version = mod_version + "-" + new Date().format('yyyyMMdd_HHmmss')
     }
 
     replaceIn "reference/Reference.java"
@@ -70,6 +78,8 @@ processResources
 {
     // Exclude the GIMP image files
     exclude '**/*.xcf'
+    // Exclude the BDCraft Cubik raw model files
+    exclude '**/*.bdc3D'
 
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version

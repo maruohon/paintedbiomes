@@ -7,9 +7,9 @@ import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
 public class GenLayerBiomeGeneration extends GenLayerBiome
 {
-    public GenLayerBiomeGeneration(long seed, GenLayer parent, WorldType worldType)
+    public GenLayerBiomeGeneration(long seed, GenLayer parent, WorldType worldType, String chunkProviderSettingsJson)
     {
-        super(seed, parent, worldType);
+        super(seed, parent, worldType, chunkProviderSettingsJson);
     }
 
     @Override
