@@ -6,7 +6,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 
-public class ImageHandler implements IImageReader
+public class ImageHandler
 {
     private static TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
     private ImageCache regionImageCache;
@@ -28,7 +28,6 @@ public class ImageHandler implements IImageReader
         }
 
         this.templatePath = file.getAbsolutePath();
-        imageHandlers.put(dimension, this);
     }
 
     public static ImageHandler getImageHandler(int dimension)
@@ -36,7 +35,8 @@ public class ImageHandler implements IImageReader
         ImageHandler imageHandler = imageHandlers.get(dimension);
         if (imageHandler == null)
         {
-            return new ImageHandler(dimension);
+            imageHandler = new ImageHandler(dimension);
+            imageHandlers.put(dimension, imageHandler);
         }
 
         return imageHandler;
@@ -63,17 +63,17 @@ public class ImageHandler implements IImageReader
         }
         else
         {
-            this.regionImageCache = new ImageCache();
             this.singleImage = null;
+            this.regionImageCache = new ImageCache();
         }
     }
 
     public static void tickTimeouts()
     {
-        if (++timer >= 200)
+        if (++timer >= 20)
         {
             timer = 0;
-            int threshold = 60; // 60 second timeout for non-accessed images
+            int threshold = 300; // 5 minute timeout for non-accessed images
             TIntObjectIterator<ImageHandler> iterator = imageHandlers.iterator();
 
             for (int i = imageHandlers.size(); i > 0; --i)
@@ -89,18 +89,13 @@ public class ImageHandler implements IImageReader
         }
     }
 
-    @Override
-    public boolean areCoordinatesInsideTemplate(int blockX, int blockZ)
-    {
-        if (this.useSingleTemplateImage == true)
-        {
-            return this.singleImage.areCoordinatesInsideTemplate(blockX, blockZ);
-        }
-
-        return this.regionImageCache.getRegionImage(blockX, blockZ, this.templatePath).areCoordinatesInsideTemplate(blockX, blockZ);
-    }
-
-    @Override
+    /**
+     * Returns the Biome ID to use for generation at the given world coordinates.
+     * This takes into account the configuration values of how undefined areas and areas outside of template images are handled.
+     * The defaultBiomeID parameter should hold the Biome ID from the regular terrain generator.
+     * 
+     * @return The Biome ID to be used for the world generation at the given block coordinates
+     */
     public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.useSingleTemplateImage == true)
