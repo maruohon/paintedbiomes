@@ -20,13 +20,13 @@ public class GenLayerBiomeGeneration extends GenLayerBiome
         int i = 0;
         int endX = x + width;
         int endZ = z + length;
+        ImageHandler imageHandler = ImageHandler.getImageHandler(0);
 
         for (int tz = z; tz < endZ; ++tz)
         {
             for (int tx = x; tx < endX; ++tx)
             {
-                // FIXME is there any way to have per-dimension GenLayers?
-                ints[i] = ImageHandler.getImageHandler(0).getBiomeIDAt(tx << 2, tz << 2, ints[i]);
+                ints[i] = imageHandler.getBiomeIDAt(tx << 2, tz << 2, ints[i]);
                 i++;
             }
         }

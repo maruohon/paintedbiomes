@@ -38,9 +38,15 @@ public class ImageSingle implements IImageReader
     public void reload()
     {
         this.readImageTemplate(this.imageFile);
-        this.setTemplateAlignment(Configs.getInstance().templateAlignmentMode, Configs.getInstance().templateAlignmentX, Configs.getInstance().templateAlignmentZ);
+
+        Configs conf = Configs.getInstance();
+        this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
+        this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
+        this.templateAlignmentMode = conf.templateAlignmentMode;
+        this.templateAlignmentX = conf.templateAlignmentX;
+        this.templateAlignmentZ = conf.templateAlignmentZ;
+
         this.setBoundsFromImage();
-        this.setBiomeHandling();
     }
 
     public void readImageTemplate(File imageFile)
@@ -59,13 +65,6 @@ public class ImageSingle implements IImageReader
         {
             PaintedBiomes.logger.warn("Failed to read single-image-template from '" + imageFile.getAbsolutePath() + "'");
         }
-    }
-
-    public void setTemplateAlignment(int alignmentMode, int x, int z)
-    {
-        this.templateAlignmentMode = alignmentMode;
-        this.templateAlignmentX = x;
-        this.templateAlignmentZ = z;
     }
 
     public void setBoundsFromImage()
@@ -118,13 +117,6 @@ public class ImageSingle implements IImageReader
         }
     }
 
-    public void setBiomeHandling()
-    {
-        this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
-        this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
-    }
-
-    @Override
     public boolean areCoordinatesInsideTemplate(int blockX, int blockZ)
     {
         return this.imageData != null && blockX >= this.minX && blockX <= this.maxX && blockZ >= this.minZ && blockZ <= this.maxZ;
@@ -136,7 +128,7 @@ public class ImageSingle implements IImageReader
         if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
         {
             // Default biome defined for areas outside of the template image
-            if (this.unpaintedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
+            if (this.unpaintedAreaBiomeID != -1)
             {
                 return this.unpaintedAreaBiomeID;
             }
@@ -147,7 +139,13 @@ public class ImageSingle implements IImageReader
         int x = blockX - this.minX;
         int y = blockZ - this.minZ;
 
-        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.instance.getBiomeIDForColor(this.imageData.getRGB(x, y));
+
+        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (biomeID == -1)
+        {
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
+        }
 
         int[] alpha = new int[1];
         try
@@ -167,18 +165,18 @@ public class ImageSingle implements IImageReader
             PaintedBiomes.logger.fatal("Error reading the alpha channel of the template image");
         }
 
-        // Completely transparent pixel or undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (alpha[0] == 0x00 || biomeID == -1)
+        // Completely transparent pixel, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (alpha[0] == 0x00)
         {
-            // Default biome defined for transparent areas
-            if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
-            {
-                return this.templateUndefinedAreaBiomeID;
-            }
-
-            return defaultBiomeID;
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
         }
 
         return biomeID;
+    }
+
+    private int getUndefinedAreaBiomeID(int defaultBiomeID)
+    {
+        // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
+        return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
     }
 }

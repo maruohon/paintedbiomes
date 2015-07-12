@@ -4,6 +4,7 @@ import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
@@ -43,7 +44,8 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onInitBiomeGen(WorldTypeEvent.InitBiomeGens event)
     {
-        //PaintedBiomes.logger.info("InitBiomeGensEvent");
+        PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers...");
+        //Configs.getInstance().loadConfigs();
         ImageHandler.getImageHandler(0).init();
         event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType);
         event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType);

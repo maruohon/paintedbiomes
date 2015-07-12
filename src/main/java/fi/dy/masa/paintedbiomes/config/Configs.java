@@ -22,7 +22,7 @@ public class Configs
     public boolean useSingleTemplateImage;
 
     public int unpaintedAreaBiome;
-    public boolean useCustomColorMappings;
+    private boolean useCustomColorMappings;
 
     public Configs(File file)
     {
@@ -43,25 +43,25 @@ public class Configs
     {
         PaintedBiomes.logger.info("Loading configuration...");
 
-        this.conf = new Configuration(this.configFile);
+        this.conf = new Configuration(this.configFile, null, true); // true: Use case sensitive category names
         this.conf.load();
         Property prop;
 
         String category = "Generic";
 
         prop = this.conf.get(category, "unpaintedAreaBiomeID", -1);
-        prop.comment = "What to do with the areas outside the template image(s). -1 = use the biome from regular world generation, 0..255 = the biome ID to use";
-        this.unpaintedAreaBiome = this.checkAndFixValueInt(prop, -1, 255, -1);
+        prop.comment = "Biome handling outside of the template image(s). -1 = Use the biome from regular terrain generation, 0..255 = the Biome ID to use.";
+        this.unpaintedAreaBiome = this.checkAndFixBiomeID("unpaintedAreaBiomeID", prop, -1);
 
-        prop = this.conf.get(category, "useCustomColorMappings", true);
-        prop.comment = "Whether to use custom assigned colors for biomes. false = blue channel value defines the biome ID (0-255), true = the entire RGB value (excluding alpha!) is used and mapped to the biome.";
+        prop = this.conf.get(category, "useCustomColorsAsDefaults", true);
+        prop.comment = "This only affects whether the missing ColorToBiomeMappings values, when added, use the custom colors from Amidst, or if they just map the Biome ID to the red channel. true = Use custom colors from Amidst as defaults, false = Map biome ID to red channel.";
         this.useCustomColorMappings = prop.getBoolean();
 
         category = "TemplateImage";
 
         prop = this.conf.get(category, "templateAlignmentMode", 0);
         prop.comment = "When using a single template image, how the template image is aligned in the world. The alignment point is defined by templateAlignmentX and templateAlignmentZ. 0 = centered, 1 = top left, 2 = top right, 3 = bottom right, 4 = bottom left.";
-        this.templateAlignmentMode = this.checkAndFixValueInt(prop, 0, 4, 0);
+        this.templateAlignmentMode = this.checkAndFixConfigValueInt("templateAlignmentMode", prop, 0, 4, 0);
 
         prop = this.conf.get(category, "templateAlignmentX", 0);
         prop.comment = "The world X coordinate where the selected point (templateAlignmentMode) of the template image is aligned.";
@@ -72,11 +72,11 @@ public class Configs
         this.templateAlignmentZ = prop.getInt();
 
         prop = this.conf.get(category, "templateUndefinedAreaBiomeID", -1);
-        prop.comment = "What to do with the undefined (= completely transparent) areas _inside the template image_. -1 = use the biome from regular world generation, 0..255 = the biome ID to use";
-        this.templateUndefinedAreaBiome = this.checkAndFixValueInt(prop, -1, 255, -1);
+        prop.comment = "How to handle \"undefined\" (= completely transparent) areas within the template image area(s). -1 = Use the biome from regular terrain generation, 0..255 = the biome ID to use.";
+        this.templateUndefinedAreaBiome = this.checkAndFixBiomeID("templateUndefinedAreaBiomeID", prop, -1);
 
         prop = this.conf.get(category, "useSingleTemplateImage", true);
-        prop.comment = "true = Use only one image template. false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
+        prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
         this.useSingleTemplateImage = prop.getBoolean();
 
         this.readColorToBiomeMappings();
@@ -90,12 +90,11 @@ public class Configs
     private void readColorToBiomeMappings()
     {
         ConfigCategory configCategory = this.conf.getCategory("ColorToBiomeMappings");
-        configCategory.setComment("Custom mappings from biome name to the RGB color value. Specified as hex values, without the leading \"0x\".");
+        configCategory.setComment("Mappings from biome name to the RGB color value. These are now always used! Specified as hex values, without the leading '0x'.");
 
         ColorToBiomeMapping colorToBiomeMapping = new ColorToBiomeMapping();
-        colorToBiomeMapping.setUseCustomMappings(this.useCustomColorMappings);
 
-        // Iterate over the biome array, and for each biome that is found in the config, add the custom color mapping
+        // Iterate over the biome array and add a color-to-biome mapping for all of them
         BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
         for (BiomeGenBase biome : biomes)
         {
@@ -104,10 +103,11 @@ public class Configs
                 continue;
             }
 
-            int color = biome.biomeID;
             Property prop;
+            // Default mapping is from the Biome ID to the red channel
+            int color = (biome.biomeID & 0xFF) << 16;
 
-            // Mapping found in the config
+            // Mapping found in the config, use that color value
             if (configCategory.containsKey(biome.biomeName) == true)
             {
                 prop = configCategory.get(biome.biomeName);
@@ -118,15 +118,16 @@ public class Configs
                 }
                 catch (NumberFormatException e)
                 {
-                    PaintedBiomes.logger.warn("Failed to parse color value '" + prop.getString() + "' for biome '" + biome.biomeName);
+                    PaintedBiomes.logger.warn(String.format("Failed to parse color value '%s' for biome '%s'", prop.getString(), biome.biomeName));
                 }
             }
-            // No mapping found, add a default mapping, so that all the existing biomes will get added to the config
+            // No mapping found in the config, add a default mapping, so that all the existing biomes will get added to the config
             else
             {
                 if (this.useCustomColorMappings == true)
                 {
-                    Integer colorInteger = DefaultColorMappings.getBiomeColor(biome.biomeName);
+                    // Try to get the default custom color, if one is defined for this biome
+                    Integer colorInteger = DefaultColorMappings.getColorForBiome(biome.biomeName);
                     if (colorInteger != null)
                     {
                         color = colorInteger.intValue();
@@ -137,27 +138,40 @@ public class Configs
                 configCategory.put(biome.biomeName, prop);
             }
 
-            // Don't add color mappings as custom mappings if they are just the default mapping from blue channel to BiomeID
-            if (this.useCustomColorMappings == true && color != biome.biomeID)
-            {
-                colorToBiomeMapping.addCustomMapping(color, biome.biomeID);
-            }
+            // For simplicity, when generating terrain, the biome is always read from the mapping, even in case of a red channel mapping.
+            // So basically we want to always add all the existing biomes to the color-to-biome map.
+            colorToBiomeMapping.addMapping(color, biome.biomeID);
 
             // Update the comment, in case the biome ID has been changed since the config was first generated
-            prop.comment = "Biome name: " + biome.biomeName + ", Biome ID: " + biome.biomeID;
+            prop.comment = "Biome name: " + biome.biomeName + ", Biome ID: " + biome.biomeID + " (Color as int: " + color + ")";
         }
     }
 
-    public int checkAndFixValueInt(Property prop, int min, int max, int defaultValue)
+    private int checkAndFixConfigValueInt(String configName, Property prop, int min, int max, int defaultValue)
     {
         int value = prop.getInt();
 
         if (value < min || value > max)
         {
+            PaintedBiomes.logger.warn(String.format("Invalid config value for %s: '%d', setting it to '%d'.", configName, value, defaultValue));
             value = defaultValue;
             prop.set(value);
         }
 
         return value;
+    }
+
+    private int checkAndFixBiomeID(String configName, Property prop, int defaultBiomeId)
+    {
+        int biomeId = this.checkAndFixConfigValueInt(configName, prop, -1, BiomeGenBase.getBiomeGenArray().length - 1, defaultBiomeId);
+
+        if (biomeId >= 0 && BiomeGenBase.getBiomeGenArray()[biomeId] == null)
+        {
+            PaintedBiomes.logger.warn(String.format("Invalid/non-existing Biome ID '%d' for config %s, setting the value to '%d'.", biomeId, configName, defaultBiomeId));
+            biomeId = defaultBiomeId;
+            prop.set(biomeId);
+        }
+
+        return biomeId;
     }
 }

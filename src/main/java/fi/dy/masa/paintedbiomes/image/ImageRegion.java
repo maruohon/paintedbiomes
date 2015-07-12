@@ -28,7 +28,8 @@ public class ImageRegion implements IImageReader
         this.imageFile = new File(path, this.name + ".png");
 
         this.readImageTemplate(this.imageFile);
-        this.setBiomeHandling();
+        this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
+        this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
     }
 
     public void readImageTemplate(File imageFile)
@@ -59,13 +60,6 @@ public class ImageRegion implements IImageReader
         }
     }
 
-    public void setBiomeHandling()
-    {
-        this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
-        this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
-    }
-
-    @Override
     public boolean areCoordinatesInsideTemplate(int blockX, int blockZ)
     {
         blockX = (blockX % 512 + 512) % 512;
@@ -80,7 +74,7 @@ public class ImageRegion implements IImageReader
         if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
         {
             // Default biome defined for areas outside of the template image
-            if (this.unpaintedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
+            if (this.unpaintedAreaBiomeID != -1)
             {
                 return this.unpaintedAreaBiomeID;
             }
@@ -92,7 +86,13 @@ public class ImageRegion implements IImageReader
         int x = (blockX % 512 + 512) % 512;
         int y = (blockZ % 512 + 512) % 512;
 
-        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.instance.getBiomeIDForColor(this.imageData.getRGB(x, y));
+
+        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (biomeID == -1)
+        {
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
+        }
 
         int[] alpha = new int[1];
         try
@@ -112,18 +112,18 @@ public class ImageRegion implements IImageReader
             PaintedBiomes.logger.fatal("Error reading the alpha channel of the template image");
         }
 
-        // Completely transparent pixel or undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (alpha[0] == 0x00 || biomeID == -1)
+        // Completely transparent pixel, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (alpha[0] == 0x00)
         {
-            // Default biome defined for transparent areas
-            if (this.templateUndefinedAreaBiomeID >= 0 && this.templateUndefinedAreaBiomeID <= 255)
-            {
-                return this.templateUndefinedAreaBiomeID;
-            }
-
-            return defaultBiomeID;
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
         }
 
         return biomeID;
+    }
+
+    private int getUndefinedAreaBiomeID(int defaultBiomeID)
+    {
+        // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
+        return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
     }
 }

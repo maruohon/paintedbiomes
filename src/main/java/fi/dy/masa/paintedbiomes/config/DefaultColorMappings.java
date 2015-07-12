@@ -8,6 +8,7 @@ public class DefaultColorMappings
 {
     private static Map<String, Integer> defaultColors;
 
+    /* These are the biome colors used by default in the Amidst program. */
     static
     {
         defaultColors = Maps.newHashMap();
@@ -75,7 +76,7 @@ public class DefaultColorMappings
         defaultColors.put("Mesa Plateau M", 0xF2B48D);
     }
 
-    public static Integer getBiomeColor(String biomeName)
+    public static Integer getColorForBiome(String biomeName)
     {
         return defaultColors.get(biomeName);
     }

@@ -1,60 +1,38 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
-import net.minecraft.world.biome.BiomeGenBase;
 
 public class ColorToBiomeMapping
 {
-    private static ColorToBiomeMapping instance;
+    public static ColorToBiomeMapping instance;
     /** Mapping from an RGB color value to a Biome ID */
-    private TIntObjectHashMap<Integer> customMappings;
-    private boolean useCustomMappings;
+    private TIntObjectHashMap<Integer> colorToBiomeMappings;
 
     public ColorToBiomeMapping()
     {
         instance = this;
-        this.clearCustomMappings();
+        this.initMappings();
     }
 
-    public static ColorToBiomeMapping getInstance()
+    public void initMappings()
     {
-        return instance;
+        this.colorToBiomeMappings = new TIntObjectHashMap<Integer>();
     }
 
-    public void setUseCustomMappings(boolean value)
+    public void addMapping(int color, int biomeID)
     {
-        this.useCustomMappings = value;
+        this.colorToBiomeMappings.put(color & 0x00FFFFFF, biomeID);
     }
 
-    public void clearCustomMappings()
-    {
-        this.customMappings = new TIntObjectHashMap<Integer>();
-    }
-
-    public void addCustomMapping(int color, int biomeID)
-    {
-        this.customMappings.put(color & 0x00FFFFFF, biomeID);
-    }
-
+    /** Returns the Biome ID to use for the given color. If there is no mapping for the given color, then -1 is returned.
+     * @param color
+     * @return The Biome ID to use, or -1 to indicate that we should use the Biome from the regular terrain generation
+     */
     public int getBiomeIDForColor(int color)
     {
-        int biomeID = -1;
+        Integer biomeInteger = this.colorToBiomeMappings.get(color & 0x00FFFFFF);
 
-        if (this.useCustomMappings == true)
-        {
-            Integer biomeInteger = this.customMappings.get(color & 0x00FFFFFF);
-            if (biomeInteger != null)
-            {
-                biomeID = biomeInteger.intValue();
-            }
-        }
-        else
-        {
-            // Default mapping: use the value of the blue channel as the BiomeID
-            biomeID = color & 0x000000FF;
-        }
-
-        BiomeGenBase[] biomeGenBaseArray = BiomeGenBase.getBiomeGenArray();
-        return (biomeGenBaseArray != null && biomeID >= 0 && biomeID < biomeGenBaseArray.length && biomeGenBaseArray[biomeID] != null ? biomeID : -1);
+        // Default for unknown colors is to use the biome from the regular terrain generation
+        return biomeInteger != null ? biomeInteger.intValue() : -1;
     }
 }
