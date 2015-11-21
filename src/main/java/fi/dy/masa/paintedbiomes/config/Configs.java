@@ -24,6 +24,12 @@ public class Configs
     public int unpaintedAreaBiome;
     private boolean useCustomColorMappings;
 
+    public boolean useTemplateRepeating;
+    public int repeatTemplatePositiveX;
+    public int repeatTemplatePositiveZ;
+    public int repeatTemplateNegativeX;
+    public int repeatTemplateNegativeZ;
+
     public Configs(File file)
     {
         this.configFile = file;
@@ -78,6 +84,31 @@ public class Configs
         prop = this.conf.get(category, "useSingleTemplateImage", true);
         prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
         this.useSingleTemplateImage = prop.getBoolean();
+
+        category = "TemplateRepeating";
+
+        ConfigCategory cat = this.conf.getCategory(category);
+        cat.setComment("Template repeating options. Template repeating only works in the Single Template mode.");
+
+        prop = this.conf.get(category, "useTemplateRepeating", false);
+        prop.comment = "Enable template repeating. Note that you have to also select the directions that you want to repeat in and the repeating method.";
+        this.useTemplateRepeating = prop.getBoolean();
+
+        prop = this.conf.get(category, "repeatTemplatePositiveX", 0);
+        prop.comment = "Repeat the template image in the positive X direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        this.repeatTemplatePositiveX = this.checkAndFixConfigValueInt("repeatTemplatePositiveX", prop, 0, 2, 0);
+
+        prop = this.conf.get(category, "repeatTemplatePositiveZ", 0);
+        prop.comment = "Repeat the template image in the positive Z direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        this.repeatTemplatePositiveZ = this.checkAndFixConfigValueInt("repeatTemplatePositiveZ", prop, 0, 2, 0);
+
+        prop = this.conf.get(category, "repeatTemplateNegativeX", 0);
+        prop.comment = "Repeat the template image in the negative X direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        this.repeatTemplateNegativeX = this.checkAndFixConfigValueInt("repeatTemplateNegativeX", prop, 0, 2, 0);
+
+        prop = this.conf.get(category, "repeatTemplateNegativeZ", 0);
+        prop.comment = "Repeat the template image in the negative Z direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        this.repeatTemplateNegativeZ = this.checkAndFixConfigValueInt("repeatTemplateNegativeZ", prop, 0, 2, 0);
 
         this.readColorToBiomeMappings();
 

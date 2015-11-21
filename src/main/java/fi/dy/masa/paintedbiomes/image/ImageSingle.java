@@ -122,30 +122,15 @@ public class ImageSingle implements IImageReader
         return this.imageData != null && blockX >= this.minX && blockX <= this.maxX && blockZ >= this.minZ && blockZ <= this.maxZ;
     }
 
-    @Override
-    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    protected int getBiomeIdFromTemplateImage(int imageX, int imageZ, int defaultBiomeID)
     {
-        if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
-        {
-            // Default biome defined for areas outside of the template image
-            if (this.unpaintedAreaBiomeID != -1)
-            {
-                return this.unpaintedAreaBiomeID;
-            }
-
-            return defaultBiomeID;
-        }
-
-        int x = blockX - this.minX;
-        int y = blockZ - this.minZ;
-
         int[] alpha = new int[1];
         try
         {
             WritableRaster raster = this.imageData.getAlphaRaster();
             if (raster != null)
             {
-                raster.getPixel(x, y, alpha);
+                raster.getPixel(imageX, imageZ, alpha);
             }
             else
             {
@@ -163,7 +148,7 @@ public class ImageSingle implements IImageReader
             return this.getUndefinedAreaBiomeID(defaultBiomeID);
         }
 
-        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageZ));
 
         // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
         if (biomeID == -1)
@@ -172,6 +157,24 @@ public class ImageSingle implements IImageReader
         }
 
         return biomeID;
+    }
+
+    @Override
+    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    {
+        // The given coordinates are not covered by a template image
+        if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
+        {
+            return this.getUnpaintedAreaBiomeID(defaultBiomeID);
+        }
+
+        return this.getBiomeIdFromTemplateImage(blockX - this.minX, blockZ - this.minZ, defaultBiomeID);
+    }
+
+    protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
+    {
+        // If there is a biome defined for unpainted areas, then use that, otherwise use the biome from the regular terrain generation
+        return this.unpaintedAreaBiomeID != -1 ? this.unpaintedAreaBiomeID : defaultBiomeID;
     }
 
     protected int getUndefinedAreaBiomeID(int defaultBiomeID)
