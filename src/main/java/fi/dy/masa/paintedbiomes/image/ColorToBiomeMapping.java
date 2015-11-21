@@ -4,7 +4,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class ColorToBiomeMapping
 {
-    public static ColorToBiomeMapping instance;
+    private static ColorToBiomeMapping instance;
     /** Mapping from an RGB color value to a Biome ID */
     private TIntObjectHashMap<Integer> colorToBiomeMappings;
 
@@ -12,6 +12,11 @@ public class ColorToBiomeMapping
     {
         instance = this;
         this.initMappings();
+    }
+
+    public static ColorToBiomeMapping getInstance()
+    {
+        return instance;
     }
 
     public void initMappings()

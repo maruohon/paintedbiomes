@@ -12,22 +12,22 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle implements IImageReader
 {
-    private File imageFile;
-    private BufferedImage imageData;
-    private int imageWidth;
-    private int imageHeight;
+    protected File imageFile;
+    protected BufferedImage imageData;
+    protected int imageWidth;
+    protected int imageHeight;
 
-    private int templateAlignmentMode;
-    private int templateAlignmentX;
-    private int templateAlignmentZ;
+    protected int templateAlignmentMode;
+    protected int templateAlignmentX;
+    protected int templateAlignmentZ;
 
-    private int unpaintedAreaBiomeID;
-    private int templateUndefinedAreaBiomeID;
+    protected int unpaintedAreaBiomeID;
+    protected int templateUndefinedAreaBiomeID;
 
-    private int minX;
-    private int maxX;
-    private int minZ;
-    private int maxZ;
+    protected int minX;
+    protected int maxX;
+    protected int minZ;
+    protected int maxZ;
 
     public ImageSingle(File imageFile)
     {
@@ -139,7 +139,7 @@ public class ImageSingle implements IImageReader
         int x = blockX - this.minX;
         int y = blockZ - this.minZ;
 
-        int biomeID = ColorToBiomeMapping.instance.getBiomeIDForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
 
         // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
         if (biomeID == -1)
@@ -174,7 +174,7 @@ public class ImageSingle implements IImageReader
         return biomeID;
     }
 
-    private int getUndefinedAreaBiomeID(int defaultBiomeID)
+    protected int getUndefinedAreaBiomeID(int defaultBiomeID)
     {
         // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
         return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;

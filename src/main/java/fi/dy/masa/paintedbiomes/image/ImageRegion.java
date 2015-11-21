@@ -12,15 +12,15 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageRegion implements IImageReader
 {
-    private String name;
-    private File imageFile;
+    protected String name;
+    protected File imageFile;
 
-    private BufferedImage imageData;
-    private int imageWidth;
-    private int imageHeight;
+    protected BufferedImage imageData;
+    protected int imageWidth;
+    protected int imageHeight;
 
-    private int unpaintedAreaBiomeID;
-    private int templateUndefinedAreaBiomeID;
+    protected int unpaintedAreaBiomeID;
+    protected int templateUndefinedAreaBiomeID;
 
     public ImageRegion(int regionX, int regionZ, String path)
     {
@@ -86,7 +86,7 @@ public class ImageRegion implements IImageReader
         int x = (blockX % 512 + 512) % 512;
         int y = (blockZ % 512 + 512) % 512;
 
-        int biomeID = ColorToBiomeMapping.instance.getBiomeIDForColor(this.imageData.getRGB(x, y));
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
 
         // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
         if (biomeID == -1)
@@ -121,7 +121,7 @@ public class ImageRegion implements IImageReader
         return biomeID;
     }
 
-    private int getUndefinedAreaBiomeID(int defaultBiomeID)
+    protected int getUndefinedAreaBiomeID(int defaultBiomeID)
     {
         // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
         return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
