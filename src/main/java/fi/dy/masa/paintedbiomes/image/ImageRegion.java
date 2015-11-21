@@ -86,14 +86,6 @@ public class ImageRegion implements IImageReader
         int x = (blockX % 512 + 512) % 512;
         int y = (blockZ % 512 + 512) % 512;
 
-        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
-
-        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (biomeID == -1)
-        {
-            return this.getUndefinedAreaBiomeID(defaultBiomeID);
-        }
-
         int[] alpha = new int[1];
         try
         {
@@ -114,6 +106,14 @@ public class ImageRegion implements IImageReader
 
         // Completely transparent pixel, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
         if (alpha[0] == 0x00)
+        {
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
+        }
+
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
+
+        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (biomeID == -1)
         {
             return this.getUndefinedAreaBiomeID(defaultBiomeID);
         }
