@@ -12,22 +12,22 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle implements IImageReader
 {
-    private File imageFile;
-    private BufferedImage imageData;
-    private int imageWidth;
-    private int imageHeight;
+    protected File imageFile;
+    protected BufferedImage imageData;
+    protected int imageWidth;
+    protected int imageHeight;
 
-    private int templateAlignmentMode;
-    private int templateAlignmentX;
-    private int templateAlignmentZ;
+    protected int templateAlignmentMode;
+    protected int templateAlignmentX;
+    protected int templateAlignmentZ;
 
-    private int unpaintedAreaBiomeID;
-    private int templateUndefinedAreaBiomeID;
+    protected int unpaintedAreaBiomeID;
+    protected int templateUndefinedAreaBiomeID;
 
-    private int minX;
-    private int maxX;
-    private int minZ;
-    private int maxZ;
+    protected int minX;
+    protected int maxX;
+    protected int minZ;
+    protected int maxZ;
 
     public ImageSingle(File imageFile)
     {
@@ -122,38 +122,15 @@ public class ImageSingle implements IImageReader
         return this.imageData != null && blockX >= this.minX && blockX <= this.maxX && blockZ >= this.minZ && blockZ <= this.maxZ;
     }
 
-    @Override
-    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    protected int getBiomeIdFromTemplateImage(int imageX, int imageZ, int defaultBiomeID)
     {
-        if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
-        {
-            // Default biome defined for areas outside of the template image
-            if (this.unpaintedAreaBiomeID != -1)
-            {
-                return this.unpaintedAreaBiomeID;
-            }
-
-            return defaultBiomeID;
-        }
-
-        int x = blockX - this.minX;
-        int y = blockZ - this.minZ;
-
-        int biomeID = ColorToBiomeMapping.instance.getBiomeIDForColor(this.imageData.getRGB(x, y));
-
-        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (biomeID == -1)
-        {
-            return this.getUndefinedAreaBiomeID(defaultBiomeID);
-        }
-
         int[] alpha = new int[1];
         try
         {
             WritableRaster raster = this.imageData.getAlphaRaster();
             if (raster != null)
             {
-                raster.getPixel(x, y, alpha);
+                raster.getPixel(imageX, imageZ, alpha);
             }
             else
             {
@@ -171,10 +148,36 @@ public class ImageSingle implements IImageReader
             return this.getUndefinedAreaBiomeID(defaultBiomeID);
         }
 
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageZ));
+
+        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        if (biomeID == -1)
+        {
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
+        }
+
         return biomeID;
     }
 
-    private int getUndefinedAreaBiomeID(int defaultBiomeID)
+    @Override
+    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    {
+        // The given coordinates are not covered by a template image
+        if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
+        {
+            return this.getUnpaintedAreaBiomeID(defaultBiomeID);
+        }
+
+        return this.getBiomeIdFromTemplateImage(blockX - this.minX, blockZ - this.minZ, defaultBiomeID);
+    }
+
+    protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
+    {
+        // If there is a biome defined for unpainted areas, then use that, otherwise use the biome from the regular terrain generation
+        return this.unpaintedAreaBiomeID != -1 ? this.unpaintedAreaBiomeID : defaultBiomeID;
+    }
+
+    protected int getUndefinedAreaBiomeID(int defaultBiomeID)
     {
         // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
         return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;

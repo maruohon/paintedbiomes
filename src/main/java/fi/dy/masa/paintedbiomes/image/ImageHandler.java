@@ -56,15 +56,23 @@ public class ImageHandler
     {
         this.useSingleTemplateImage = Configs.getInstance().useSingleTemplateImage;
 
-        if (this.useSingleTemplateImage == true)
-        {
-            this.singleImage = new ImageSingle(new File(this.templatePath, "biomes.png"));
-            this.regionImageCache = null;
-        }
-        else
+        // Per-region template images mode
+        if (this.useSingleTemplateImage == false)
         {
             this.singleImage = null;
             this.regionImageCache = new ImageCache();
+        }
+        // Single template image mode, with some type of template repeating
+        else if (Configs.getInstance().useTemplateRepeating == true)
+        {
+            this.singleImage = new ImageSingleRepeating(new File(this.templatePath, "biomes.png"));
+            this.regionImageCache = null;
+        }
+        // Single template image mode, no repeating
+        else
+        {
+            this.singleImage = new ImageSingle(new File(this.templatePath, "biomes.png"));
+            this.regionImageCache = null;
         }
     }
 
