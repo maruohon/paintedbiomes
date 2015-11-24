@@ -1,5 +1,6 @@
 package fi.dy.masa.paintedbiomes.image;
 
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -14,20 +15,14 @@ public class ImageHandler
 
     private static String templateBasePath;
     private String templatePath;
+    private int dimension;
 
     private boolean useSingleTemplateImage;
     private static int timer;
 
     public ImageHandler(int dimension)
     {
-        //File file = new File(templateBasePath, "DIM" + dimension);
-        File file = new File(templateBasePath);
-        if (file.exists() == false)
-        {
-            file.mkdirs();
-        }
-
-        this.templatePath = file.getAbsolutePath();
+        this.dimension = dimension;
     }
 
     public static ImageHandler getImageHandler(int dimension)
@@ -52,9 +47,24 @@ public class ImageHandler
         templateBasePath = path;
     }
 
+    protected void createAndSetTemplateDir()
+    {
+        File file = new File(templateBasePath, "DIM" + this.dimension);
+        if (file.exists() == false)
+        {
+            if (file.mkdirs() == false)
+            {
+                PaintedBiomes.logger.error("Error creating template directory '" + file.getAbsolutePath() + "'.");
+            }
+        }
+
+        this.templatePath = file.getAbsolutePath();
+    }
+
     public void init()
     {
         this.useSingleTemplateImage = Configs.getInstance().useSingleTemplateImage;
+        this.createAndSetTemplateDir();
 
         // Per-region template images mode
         if (this.useSingleTemplateImage == false)

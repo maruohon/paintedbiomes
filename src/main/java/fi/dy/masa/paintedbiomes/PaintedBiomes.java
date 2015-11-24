@@ -34,6 +34,7 @@ public class PaintedBiomes
         ImageHandler.setTemplateBasePath(new File(new File(event.getModConfigurationDirectory(), Reference.MOD_ID), "templates").getAbsolutePath());
 
         PaintedBiomesEventHandler handler = new PaintedBiomesEventHandler();
+        MinecraftForge.EVENT_BUS.register(handler);
         MinecraftForge.TERRAIN_GEN_BUS.register(handler);
         FMLCommonHandler.instance().bus().register(handler);
     }

@@ -15,6 +15,9 @@ public class Configs
     private Configuration conf;
     private File configFile;
 
+    public boolean useGenLayer;
+    public int[] enabledInDimensions;
+
     public int templateAlignmentMode;
     public int templateAlignmentX;
     public int templateAlignmentZ;
@@ -54,6 +57,14 @@ public class Configs
         Property prop;
 
         String category = "Generic";
+
+        prop = this.conf.get(category, "useGenLayer", false);
+        prop.comment = "Use biome GenLayer overrides instead of a WorldChunkManager wrapper. This only works in the Overworld, and not with many custom WorldTypes. This is the method used up until the v0.3.0 release.";
+        this.useGenLayer = prop.getBoolean();
+
+        prop = this.conf.get(category, "enabledInDimensions", new int[0]);
+        prop.comment = "A list of dimensions where Painted Biomes should be enabled.";
+        this.enabledInDimensions = prop.getIntList();
 
         prop = this.conf.get(category, "unpaintedAreaBiomeID", -1);
         prop.comment = "Biome handling outside of the template image(s). -1 = Use the biome from regular terrain generation, 0..255 = the Biome ID to use.";

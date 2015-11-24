@@ -11,23 +11,8 @@ public class ImageSingleRepeating extends ImageSingle
     public static final int POSX = 0x02;
     public static final int POSZ = 0x08;
 
-    public static final int CORNER_NEGX_NEGZ = NEGX | NEGZ;
-    public static final int CORNER_POSX_NEGZ = POSX | NEGZ;
-    public static final int CORNER_NEGX_POSZ = NEGX | POSZ;
-    public static final int CORNER_POSX_POSZ = POSX | POSZ;
-
     protected int repeatTemplate;
     protected int repeatEdge;
-
-    /*protected boolean repeatTemplatePositiveX;
-    protected boolean repeatTemplatePositiveZ;
-    protected boolean repeatTemplateNegativeX;
-    protected boolean repeatTemplateNegativeZ;
-
-    protected boolean repeatEdgePositiveX;
-    protected boolean repeatEdgePositiveZ;
-    protected boolean repeatEdgeNegativeX;
-    protected boolean repeatEdgeNegativeZ;*/
 
     public ImageSingleRepeating(File imageFile)
     {
@@ -40,17 +25,6 @@ public class ImageSingleRepeating extends ImageSingle
         super.reload();
 
         Configs conf = Configs.getInstance();
-        /*this.repeatTemplatePositiveX = this.repeatTemplatePositiveZ = this.repeatTemplateNegativeX = this.repeatEdgeNegativeZ = false;
-        this.repeatEdgePositiveX = this.repeatEdgePositiveZ = this.repeatEdgeNegativeX = this.repeatEdgeNegativeZ= false;
-        if (conf.repeatTemplatePositiveX == 1) this.repeatTemplatePositiveX = true;
-        if (conf.repeatTemplatePositiveZ == 1) this.repeatTemplatePositiveZ = true;
-        if (conf.repeatTemplateNegativeX == 1) this.repeatTemplateNegativeX = true;
-        if (conf.repeatTemplateNegativeZ == 1) this.repeatTemplateNegativeZ = true;
-
-        if (conf.repeatTemplatePositiveX == 2) this.repeatEdgePositiveX = true;
-        if (conf.repeatTemplatePositiveZ == 2) this.repeatEdgePositiveZ = true;
-        if (conf.repeatTemplateNegativeX == 2) this.repeatEdgeNegativeX = true;
-        if (conf.repeatTemplateNegativeZ == 2) this.repeatEdgeNegativeZ = true;*/
 
         this.repeatTemplate = 0;
         this.repeatEdge = 0;
