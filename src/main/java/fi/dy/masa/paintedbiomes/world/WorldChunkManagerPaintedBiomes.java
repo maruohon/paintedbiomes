@@ -11,8 +11,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeCache;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.WorldChunkManager;
-import net.minecraft.world.gen.layer.GenLayer;
-import net.minecraft.world.gen.layer.IntCache;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
@@ -20,9 +18,6 @@ import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
 public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
 {
-    protected World world;
-    protected GenLayer genBiomes;
-    protected GenLayer biomeIndexLayer;
     protected BiomeCache biomeCache;
     protected WorldChunkManager worldChunkManagerParent;
     protected ImageHandler imageHandler;
@@ -30,14 +25,9 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     public WorldChunkManagerPaintedBiomes(World world, WorldChunkManager worldChunkMgrParent, ImageHandler imageHandler)
     {
         super(world);
-        this.world = world;
         this.worldChunkManagerParent = worldChunkMgrParent;
         this.imageHandler = imageHandler;
         this.biomeCache = new BiomeCache(this);
-        GenLayer[] agenlayer = GenLayer.initializeAllBiomeGenerators(world.getSeed(), world.getWorldInfo().getTerrainType());
-        agenlayer = getModdedBiomeGenerators(world.getWorldInfo().getTerrainType(), world.getSeed(), agenlayer);
-        this.genBiomes = agenlayer[0];
-        this.biomeIndexLayer = agenlayer[1];
     }
 
     @SuppressWarnings("rawtypes")
@@ -54,76 +44,102 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     }
 
     @Override
-    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int quadrupleChunkX, int quadrupleChunkZ, int width, int length)
+    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int scaledX, int scaledZ, int width, int height)
     {
-        IntCache.resetIntCache();
-
-        int len = width * length;
-        if (biomes == null || biomes.length < len)
+        int size = width * height;
+        if (biomes == null || biomes.length < size)
         {
-            biomes = new BiomeGenBase[len];
+            biomes = new BiomeGenBase[size];
         }
 
-        int endX = quadrupleChunkX + width;
-        int endZ = quadrupleChunkZ + length;
-        int[] aint = this.genBiomes.getInts(quadrupleChunkX, quadrupleChunkZ, width, length);
+        int endX = scaledX + width;
+        int endZ = scaledZ + height;
 
-        for (int i = 0, qcz = quadrupleChunkZ; qcz < endZ; ++qcz)
+        // Get the biomes from the regular WorldChunkManager for this dimension
+        biomes = this.worldChunkManagerParent.getBiomesForGeneration(biomes, scaledX, scaledZ, width, height);
+
+        try
         {
-            for (int qcx = quadrupleChunkX; qcx < endX; ++qcx)
+            for (int i = 0, tmpZ = scaledZ; tmpZ < endZ; tmpZ++)
             {
-                biomes[i] = this.getBiomeAt(qcx << 2, qcz << 2, aint[i]);
-                i++;
+                for (int tmpX = scaledX; tmpX < endX; tmpX++, i++)
+                {
+                    biomes[i] = this.getBiomeFromTemplateAt(tmpX << 2, tmpZ << 2, biomes[i].biomeID);
+                }
             }
+        }
+        catch (Throwable throwable)
+        {
+            CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
+            CrashReportCategory crashreportcategory = crashreport.makeCategory("BiomeBlock");
+            crashreportcategory.addCrashSection("biomes[] size", Integer.valueOf(biomes.length));
+            crashreportcategory.addCrashSection("x", Integer.valueOf(scaledX));
+            crashreportcategory.addCrashSection("z", Integer.valueOf(scaledZ));
+            crashreportcategory.addCrashSection("w", Integer.valueOf(width));
+            crashreportcategory.addCrashSection("h", Integer.valueOf(height));
+            throw new ReportedException(crashreport);
         }
 
         return biomes;
     }
 
     @Override
-    public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] biomes, int x, int z, int width, int length)
+    public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] biomes, int x, int z, int width, int height)
     {
-        return this.getBiomeGenAt(biomes, x, z, width, length, true);
+        return this.getBiomeGenAt(biomes, x, z, width, height, true);
     }
 
     @Override
-    public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] biomes, int x, int z, int width, int length, boolean cacheFlag)
+    public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] biomes, int x, int z, int width, int height, boolean cacheFlag)
     {
-        IntCache.resetIntCache();
-
-        int len = width * length;
-        if (biomes == null || biomes.length < len)
+        int size = width * height;
+        if (biomes == null || biomes.length < size)
         {
-            biomes = new BiomeGenBase[len];
+            biomes = new BiomeGenBase[size];
         }
 
         // Get cached biomes
-        if (cacheFlag && width == 16 && length == 16 && (x & 15) == 0 && (z & 15) == 0)
+        if (cacheFlag == true && width == 16 && height == 16 && (x & 15) == 0 && (z & 15) == 0)
         {
             BiomeGenBase[] bgb = this.biomeCache.getCachedBiomes(x, z);
-            System.arraycopy(bgb, 0, biomes, 0, len);
+            System.arraycopy(bgb, 0, biomes, 0, size);
             return biomes;
         }
         else
         {
-            int endX = x + width;
-            int endZ = z + length;
-            int[] aint = this.biomeIndexLayer.getInts(x, z, width, length);
+            // Get the biomes from the regular WorldChunkManager for this dimension
+            biomes = this.worldChunkManagerParent.getBiomeGenAt(biomes, x, z, width, height, cacheFlag);
 
-            for (int i = 0, bz = z; bz < endZ; ++bz)
+            int endX = x + width;
+            int endZ = z + height;
+
+            try
             {
-                for (int bx = x; bx < endX; ++bx)
+                for (int i = 0, tmpZ = z; tmpZ < endZ; tmpZ++)
                 {
-                    biomes[i] = this.getBiomeAt(bx, bz, aint[i]);
-                    i++;
+                    for (int tmpX = x; tmpX < endX; tmpX++, i++)
+                    {
+                        biomes[i] = this.getBiomeFromTemplateAt(tmpX, tmpZ, biomes[i].biomeID);
+                    }
                 }
+            }
+            catch (Throwable throwable)
+            {
+                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
+                CrashReportCategory crashreportcategory = crashreport.makeCategory("BiomeBlock");
+                crashreportcategory.addCrashSection("biomes[] size", Integer.valueOf(biomes.length));
+                crashreportcategory.addCrashSection("x", Integer.valueOf(x));
+                crashreportcategory.addCrashSection("z", Integer.valueOf(z));
+                crashreportcategory.addCrashSection("w", Integer.valueOf(width));
+                crashreportcategory.addCrashSection("h", Integer.valueOf(height));
+                throw new ReportedException(crashreport);
             }
         }
 
         return biomes;
     }
 
-    private BiomeGenBase getBiomeAt(int blockX, int blockZ, int defaultBiomeID)
+    protected BiomeGenBase getBiomeFromTemplateAt(int blockX, int blockZ, int defaultBiomeID)
     {
         return BiomeGenBase.getBiome(this.imageHandler.getBiomeIDAt(blockX, blockZ, defaultBiomeID));
     }
@@ -137,42 +153,47 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     @Override
     public float[] getRainfall(float[] rainfall, int x, int z, int width, int height)
     {
-        // TODO
-
-        int len = width * height;
-        if (rainfall == null || rainfall.length < len)
+        int size = width * height;
+        if (rainfall == null || rainfall.length < size)
         {
-            rainfall = new float[len];
+            rainfall = new float[size];
         }
 
-        int[] aint = this.biomeIndexLayer.getInts(x, z, width, height);
+        rainfall = this.worldChunkManagerParent.getRainfall(rainfall, x, z, width, height);
+        BiomeGenBase biomes[] = this.getBiomeGenAt(new BiomeGenBase[size], x, z, width, height, false);
 
-        for (int i = 0; i < width * height; ++i)
+        int endX = x + width;
+        int endZ = z + height;
+
+        try
         {
-            try
+            for (int i = 0, tmpZ = z; tmpZ < endZ; tmpZ++)
             {
-                float f = 0.5f;
-                f = (float)BiomeGenBase.getBiome(aint[i]).getIntRainfall() / 65536.0f;
-
-                if (f > 1.0F)
+                for (int tmpX = x; tmpX < endX; tmpX++, i++)
                 {
-                    f = 1.0F;
-                }
+                    if (this.imageHandler.isBiomeDefinedAt(tmpX, tmpZ) == true)
+                    {
+                        float f = (float)biomes[i].getIntRainfall() / 65536.0f;
+                        if (f > 1.0f)
+                        {
+                            f = 1.0f;
+                        }
 
-                rainfall[i] = f;
+                        rainfall[i] = f;
+                    }
+                }
             }
-            catch (Throwable throwable)
-            {
-                CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
-                CrashReportCategory crashreportcategory = crashreport.makeCategory("DownfallBlock");
-                crashreportcategory.addCrashSection("biome id", Integer.valueOf(i));
-                crashreportcategory.addCrashSection("downfalls[] size", Integer.valueOf(rainfall.length));
-                crashreportcategory.addCrashSection("x", Integer.valueOf(x));
-                crashreportcategory.addCrashSection("z", Integer.valueOf(z));
-                crashreportcategory.addCrashSection("w", Integer.valueOf(width));
-                crashreportcategory.addCrashSection("h", Integer.valueOf(height));
-                throw new ReportedException(crashreport);
-            }
+        }
+        catch (Throwable throwable)
+        {
+            CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
+            CrashReportCategory crashreportcategory = crashreport.makeCategory("DownfallBlock");
+            crashreportcategory.addCrashSection("downfalls[] size", Integer.valueOf(rainfall.length));
+            crashreportcategory.addCrashSection("x", Integer.valueOf(x));
+            crashreportcategory.addCrashSection("z", Integer.valueOf(z));
+            crashreportcategory.addCrashSection("w", Integer.valueOf(width));
+            crashreportcategory.addCrashSection("h", Integer.valueOf(height));
+            throw new ReportedException(crashreport);
         }
 
         return rainfall;
@@ -189,15 +210,53 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     @Override
     public boolean areBiomesViable(int x, int z, int r, List list)
     {
-        // TODO
-        return this.worldChunkManagerParent.areBiomesViable(x, z, r, list);
+        int startX = x - r >> 2;
+        int startZ = z - r >> 2;
+        int endX = x + r >> 2;
+        int endZ = z + r >> 2;
+        int width = endX - startX + 1;
+        int height = endZ - startZ + 1;
+
+        BiomeGenBase[] biomes = this.getBiomesForGeneration(new BiomeGenBase[width * height], startX, startZ, width, height);
+
+        for (int i = 0; i < width * height; i++)
+        {
+            if (list.contains(biomes[i]) == false)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public ChunkPosition findBiomePosition(int x, int z, int r, List list, Random rand)
     {
-        // TODO
-        return this.worldChunkManagerParent.findBiomePosition(x, z, r, list, rand);
+        int startX = x - r >> 2;
+        int startZ = z - r >> 2;
+        int endX = x + r >> 2;
+        int endZ = z + r >> 2;
+        int width = endX - startX + 1;
+        int height = endZ - startZ + 1;
+        int size = width * height;
+        ChunkPosition chunkPosition = null;
+
+        BiomeGenBase[] biomes = this.getBiomesForGeneration(new BiomeGenBase[size], startX, startZ, width, height);
+
+        for (int i = 0, matches = 0; i < size; ++i)
+        {
+            int chunkX = startX + i % width << 2;
+            int chunkZ = startZ + i / width << 2;
+
+            if (list.contains(biomes[i]) && (chunkPosition == null || rand.nextInt(matches + 1) == 0))
+            {
+                chunkPosition = new ChunkPosition(chunkX, 0, chunkZ);
+                matches++;
+            }
+        }
+
+        return chunkPosition;
     }
 }

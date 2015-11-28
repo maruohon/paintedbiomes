@@ -7,7 +7,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 
-public class ImageHandler
+public class ImageHandler implements IImageReader
 {
     private static TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
     private ImageCache regionImageCache;
@@ -61,7 +61,7 @@ public class ImageHandler
         this.templatePath = file.getAbsolutePath();
     }
 
-    public void init()
+    public ImageHandler init()
     {
         this.useSingleTemplateImage = Configs.getInstance().useSingleTemplateImage;
         this.createAndSetTemplateDir();
@@ -70,7 +70,7 @@ public class ImageHandler
         if (this.useSingleTemplateImage == false)
         {
             this.singleImage = null;
-            this.regionImageCache = new ImageCache();
+            this.regionImageCache = new ImageCache(this.templatePath);
         }
         // Single template image mode, with some type of template repeating
         else if (Configs.getInstance().useTemplateRepeating == true)
@@ -84,6 +84,8 @@ public class ImageHandler
             this.singleImage = new ImageSingle(new File(this.templatePath, "biomes.png"));
             this.regionImageCache = null;
         }
+
+        return this;
     }
 
     public static void tickTimeouts()
@@ -107,13 +109,18 @@ public class ImageHandler
         }
     }
 
-    /**
-     * Returns the Biome ID to use for generation at the given world coordinates.
-     * This takes into account the configuration values of how undefined areas and areas outside of template images are handled.
-     * The defaultBiomeID parameter should hold the Biome ID from the regular terrain generator.
-     * 
-     * @return The Biome ID to be used for the world generation at the given block coordinates
-     */
+    @Override
+    public boolean isBiomeDefinedAt(int blockX, int blockZ)
+    {
+        if (this.useSingleTemplateImage == true)
+        {
+            return this.singleImage.isBiomeDefinedAt(blockX, blockZ);
+        }
+
+        return this.regionImageCache.getRegionImage(blockX, blockZ).isBiomeDefinedAt(blockX, blockZ);
+    }
+
+    @Override
     public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
     {
         if (this.useSingleTemplateImage == true)
@@ -121,6 +128,6 @@ public class ImageHandler
             return this.singleImage.getBiomeIDAt(blockX, blockZ, defaultBiomeID);
         }
 
-        return this.regionImageCache.getRegionImage(blockX, blockZ, this.templatePath).getBiomeIDAt(blockX, blockZ, defaultBiomeID);
+        return this.regionImageCache.getRegionImage(blockX, blockZ).getBiomeIDAt(blockX, blockZ, defaultBiomeID);
     }
 }

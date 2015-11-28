@@ -26,7 +26,7 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        if (event.world.isRemote == true || Configs.getInstance().useGenLayer == true)
+        if (Configs.getInstance().useGenLayer == true)
         {
             return;
         }
@@ -37,13 +37,18 @@ public class PaintedBiomesEventHandler
         {
             if (dim == i)
             {
-                PaintedBiomes.logger.info("Wrapping the WorldChunkManager of dimension " + dim + " with WorldChunkManagerPaintedBiomes...");
+                String s = String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with WorldChunkManagerPaintedBiomes...",
+                        event.world.provider.worldChunkMgr.getClass().toString(), dim);
+                PaintedBiomes.logger.info(s);
 
-                // Re-initialize the ImageHandler after a world loads, to update configs etc.
-                ImageHandler imageHandler = ImageHandler.getImageHandler(dim);
-                imageHandler.init();
+                // Re-initialize the ImageHandler after a world loads, to update config values etc.
+                ImageHandler imageHandler = ImageHandler.getImageHandler(dim).init();
 
-                event.world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(event.world, event.world.provider.worldChunkMgr, imageHandler);
+                // Don't accidentally re-wrap our own WorldChunkManager...
+                if ((event.world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes) == false)
+                {
+                    event.world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(event.world, event.world.provider.worldChunkMgr, imageHandler);
+                }
 
                 break;
             }
@@ -53,7 +58,7 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
-        if (event.world.isRemote == true || Configs.getInstance().useGenLayer == true)
+        if (Configs.getInstance().useGenLayer == true)
         {
             return;
         }

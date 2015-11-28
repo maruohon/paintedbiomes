@@ -1,7 +1,9 @@
 package fi.dy.masa.paintedbiomes.util;
 
+
 public class RegionCoords
 {
+    public static final int REGION_SIZE = 512;
     public final int regionX;
     public final int regionZ;
 
