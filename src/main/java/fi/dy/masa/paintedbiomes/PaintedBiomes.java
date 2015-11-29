@@ -3,7 +3,6 @@ package fi.dy.masa.paintedbiomes;
 import java.io.File;
 
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -36,7 +35,7 @@ public class PaintedBiomes
 
         PaintedBiomesEventHandler handler = new PaintedBiomesEventHandler();
         MinecraftForge.TERRAIN_GEN_BUS.register(handler);
-        FMLCommonHandler.instance().bus().register(handler);
+        MinecraftForge.EVENT_BUS.register(handler);
     }
 
     @Mod.EventHandler
