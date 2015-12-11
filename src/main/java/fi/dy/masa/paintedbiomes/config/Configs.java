@@ -31,6 +31,9 @@ public class Configs
 
     public boolean useGenLayer;
     public int[] enabledInDimensions;
+    public boolean overrideChunkProvider;
+    public String chunkProviderType;
+    public String chunkProviderOptions;
 
     public int templateAlignmentMode;
     public int templateAlignmentX;
@@ -54,6 +57,8 @@ public class Configs
         this.unpaintedAreaBiome = -1;
         this.useSingleTemplateImage = true;
         this.useCustomColorMappings = true;
+        this.chunkProviderType = "";
+        this.chunkProviderOptions = "";
     }
 
     private Configs(File configDir, int dimension)
@@ -166,6 +171,9 @@ public class Configs
         this.repeatTemplatePositiveZ    = old.repeatTemplatePositiveZ;
         this.repeatTemplateNegativeX    = old.repeatTemplateNegativeX;
         this.repeatTemplateNegativeZ    = old.repeatTemplateNegativeZ;
+        this.overrideChunkProvider      = old.overrideChunkProvider;
+        this.chunkProviderType          = old.chunkProviderType;
+        this.chunkProviderOptions       = old.chunkProviderOptions;
 
         return this;
     }
@@ -229,11 +237,23 @@ public class Configs
         prop.comment = "Enable template repeating. Note that you have to also select the directions that you want to repeat in and the repeating method.";
         this.useTemplateRepeating = prop.getBoolean();
 
+        category = "Generic";
+
+        prop = conf.get(category, "overrideChunkProvider", this.overrideChunkProvider);
+        prop.comment = "Set to true to use an overridden ChunkProvider. Select the type in chunkProviderType.";
+        this.overrideChunkProvider = prop.getBoolean();
+
+        prop = conf.get(category, "chunkProviderType", this.chunkProviderType);
+        prop.comment = "The ChunkProvider to use. Valid values: VANILLA_DEFAULT, VANILLA_FLAT, VANILLA_HELL, VANILLA_END";
+        this.chunkProviderType = prop.getString() != null ? prop.getString() : "";
+
+        prop = conf.get(category, "chunkProviderOptions", this.chunkProviderOptions);
+        prop.comment = "Extra options for the ChunkProvider (mostly for VANILLA_FLAT).";
+        this.chunkProviderOptions = prop.getString() != null ? prop.getString() : "";
+
         // These config values only exist and are used in the non-per-dimension configs
         if (this.isMaster == true)
         {
-            category = "Generic";
-
             prop = conf.get(category, "enabledInDimensions", new int[0]);
             prop.comment = "A list of dimensions where Painted Biomes should be enabled.";
             this.enabledInDimensions = prop.getIntList();
