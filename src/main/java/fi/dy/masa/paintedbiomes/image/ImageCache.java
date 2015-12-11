@@ -20,19 +20,19 @@ public class ImageCache
         this.path = path;
     }
 
-    public boolean contains(int blockX, int blockZ)
+    public boolean contains(int dimension, int blockX, int blockZ)
     {
-        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(blockX, blockZ));
+        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(dimension, blockX, blockZ));
     }
 
-    public IImageReader getRegionImage(int blockX, int blockZ)
+    public IImageReader getRegionImage(int dimension, int blockX, int blockZ)
     {
-        RegionCoords regionCoords = RegionCoords.fromBlockCoords(blockX, blockZ);
+        RegionCoords regionCoords = RegionCoords.fromBlockCoords(dimension, blockX, blockZ);
         IImageReader imageRegion = this.imageRegions.get(regionCoords);
 
         if (imageRegion == null)
         {
-            imageRegion = new ImageRegion(regionCoords.regionX, regionCoords.regionZ, this.path);
+            imageRegion = new ImageRegion(regionCoords.dimension, regionCoords.regionX, regionCoords.regionZ, this.path);
             this.imageRegions.put(regionCoords, imageRegion);
         }
 

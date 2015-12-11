@@ -12,6 +12,7 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageRegion implements IImageReader
 {
+    protected int dimension;
     protected String name;
 
     protected BufferedImage imageData;
@@ -21,13 +22,14 @@ public class ImageRegion implements IImageReader
     protected int unpaintedAreaBiomeID;
     protected int templateUndefinedAreaBiomeID;
 
-    public ImageRegion(int regionX, int regionZ, String path)
+    public ImageRegion(int dimension, int regionX, int regionZ, String path)
     {
+        this.dimension = dimension;
         this.name = "r." + regionX + "." + regionZ;
 
         this.readImageTemplate(new File(path, this.name + ".png"));
-        this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
-        this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
+        this.unpaintedAreaBiomeID = Configs.getConfig(this.dimension).unpaintedAreaBiome;
+        this.templateUndefinedAreaBiomeID = Configs.getConfig(this.dimension).templateUndefinedAreaBiome;
     }
 
     public void readImageTemplate(File imageFile)

@@ -216,10 +216,11 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         int endZ = z + r >> 2;
         int width = endX - startX + 1;
         int height = endZ - startZ + 1;
+        int size = width * height;
 
-        BiomeGenBase[] biomes = this.getBiomesForGeneration(new BiomeGenBase[width * height], startX, startZ, width, height);
+        BiomeGenBase[] biomes = this.getBiomesForGeneration(new BiomeGenBase[size], startX, startZ, width, height);
 
-        for (int i = 0; i < width * height; i++)
+        for (int i = 0; i < size; i++)
         {
             if (list.contains(biomes[i]) == false)
             {
@@ -245,7 +246,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
 
         BiomeGenBase[] biomes = this.getBiomesForGeneration(new BiomeGenBase[size], startX, startZ, width, height);
 
-        for (int i = 0, matches = 0; i < size; ++i)
+        for (int i = 0, matches = 0; i < size; i++)
         {
             int chunkX = startX + i % width << 2;
             int chunkZ = startZ + i / width << 2;

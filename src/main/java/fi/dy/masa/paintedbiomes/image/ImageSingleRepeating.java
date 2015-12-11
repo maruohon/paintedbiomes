@@ -14,9 +14,9 @@ public class ImageSingleRepeating extends ImageSingle
     protected int repeatTemplate;
     protected int repeatEdge;
 
-    public ImageSingleRepeating(File imageFile)
+    public ImageSingleRepeating(int dimension, File imageFile)
     {
-        super(imageFile);
+        super(dimension, imageFile);
     }
 
     @Override
@@ -24,7 +24,7 @@ public class ImageSingleRepeating extends ImageSingle
     {
         super.reload();
 
-        Configs conf = Configs.getInstance();
+        Configs conf = Configs.getConfig(this.dimension);
 
         this.repeatTemplate = 0;
         this.repeatEdge = 0;

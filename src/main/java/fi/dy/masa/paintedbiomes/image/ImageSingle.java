@@ -12,6 +12,7 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle implements IImageReader
 {
+    protected int dimension;
     protected File imageFile;
     protected BufferedImage imageData;
     protected int imageWidth;
@@ -29,8 +30,9 @@ public class ImageSingle implements IImageReader
     protected int minZ;
     protected int maxZ;
 
-    public ImageSingle(File imageFile)
+    public ImageSingle(int dimension, File imageFile)
     {
+        this.dimension = dimension;
         this.imageFile = imageFile;
         this.reload();
     }
@@ -39,7 +41,7 @@ public class ImageSingle implements IImageReader
     {
         this.readImageTemplate(this.imageFile);
 
-        Configs conf = Configs.getInstance();
+        Configs conf = Configs.getConfig(this.dimension);
         this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
         this.templateAlignmentMode = conf.templateAlignmentMode;

@@ -11,17 +11,12 @@ public class ColorToBiomeMapping
     public ColorToBiomeMapping()
     {
         instance = this;
-        this.initMappings();
+        this.colorToBiomeMappings = new TIntObjectHashMap<Integer>();
     }
 
     public static ColorToBiomeMapping getInstance()
     {
         return instance;
-    }
-
-    public void initMappings()
-    {
-        this.colorToBiomeMappings = new TIntObjectHashMap<Integer>();
     }
 
     public void addMapping(int color, int biomeID)

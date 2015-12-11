@@ -20,7 +20,7 @@ public class ImageHandler implements IImageReader
     private boolean useSingleTemplateImage;
     private static int timer;
 
-    public ImageHandler(int dimension)
+    private ImageHandler(int dimension)
     {
         this.dimension = dimension;
     }
@@ -63,7 +63,7 @@ public class ImageHandler implements IImageReader
 
     public ImageHandler init()
     {
-        this.useSingleTemplateImage = Configs.getInstance().useSingleTemplateImage;
+        this.useSingleTemplateImage = Configs.getConfig(this.dimension).useSingleTemplateImage;
         this.createAndSetTemplateDir();
 
         // Per-region template images mode
@@ -73,15 +73,15 @@ public class ImageHandler implements IImageReader
             this.regionImageCache = new ImageCache(this.templatePath);
         }
         // Single template image mode, with some type of template repeating
-        else if (Configs.getInstance().useTemplateRepeating == true)
+        else if (Configs.getConfig(this.dimension).useTemplateRepeating == true)
         {
-            this.singleImage = new ImageSingleRepeating(new File(this.templatePath, "biomes.png"));
+            this.singleImage = new ImageSingleRepeating(this.dimension, new File(this.templatePath, "biomes.png"));
             this.regionImageCache = null;
         }
         // Single template image mode, no repeating
         else
         {
-            this.singleImage = new ImageSingle(new File(this.templatePath, "biomes.png"));
+            this.singleImage = new ImageSingle(this.dimension, new File(this.templatePath, "biomes.png"));
             this.regionImageCache = null;
         }
 
@@ -117,7 +117,7 @@ public class ImageHandler implements IImageReader
             return this.singleImage.isBiomeDefinedAt(blockX, blockZ);
         }
 
-        return this.regionImageCache.getRegionImage(blockX, blockZ).isBiomeDefinedAt(blockX, blockZ);
+        return this.regionImageCache.getRegionImage(this.dimension, blockX, blockZ).isBiomeDefinedAt(blockX, blockZ);
     }
 
     @Override
@@ -128,6 +128,6 @@ public class ImageHandler implements IImageReader
             return this.singleImage.getBiomeIDAt(blockX, blockZ, defaultBiomeID);
         }
 
-        return this.regionImageCache.getRegionImage(blockX, blockZ).getBiomeIDAt(blockX, blockZ, defaultBiomeID);
+        return this.regionImageCache.getRegionImage(this.dimension, blockX, blockZ).getBiomeIDAt(blockX, blockZ, defaultBiomeID);
     }
 }

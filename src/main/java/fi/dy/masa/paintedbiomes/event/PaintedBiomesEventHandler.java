@@ -26,20 +26,19 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        if (Configs.getInstance().useGenLayer == true)
+        if (Configs.getEffectiveMainConfig().useGenLayer == true)
         {
             return;
         }
 
         int dim = event.world.provider.dimensionId;
 
-        for (int i : Configs.getInstance().enabledInDimensions)
+        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
         {
             if (dim == i)
             {
-                String s = String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with WorldChunkManagerPaintedBiomes...",
-                        event.world.provider.worldChunkMgr.getClass().toString(), dim);
-                PaintedBiomes.logger.info(s);
+                PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s ...",
+                        event.world.provider.worldChunkMgr.getClass().toString(), dim, WorldChunkManagerPaintedBiomes.class.toString()));
 
                 // Re-initialize the ImageHandler after a world loads, to update config values etc.
                 ImageHandler imageHandler = ImageHandler.getImageHandler(dim).init();
@@ -58,7 +57,7 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
-        if (Configs.getInstance().useGenLayer == true)
+        if (Configs.getEffectiveMainConfig().useGenLayer == true)
         {
             return;
         }
@@ -69,7 +68,7 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onInitBiomeGen(WorldTypeEvent.InitBiomeGens event)
     {
-        if (Configs.getInstance().useGenLayer == false)
+        if (Configs.getEffectiveMainConfig().useGenLayer == false)
         {
             return;
         }
