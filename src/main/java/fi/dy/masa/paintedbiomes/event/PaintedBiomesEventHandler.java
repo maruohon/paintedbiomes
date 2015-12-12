@@ -12,11 +12,9 @@ import net.minecraftforge.event.world.WorldEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
-import fi.dy.masa.paintedbiomes.reference.ReferenceReflection;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 import fi.dy.masa.paintedbiomes.world.WorldChunkManagerPaintedBiomes;
@@ -25,7 +23,7 @@ public class PaintedBiomesEventHandler
 {
     public PaintedBiomesEventHandler()
     {
-        ReferenceReflection.fieldWorldChunkProvider = ReflectionHelper.findField(World.class, "v", "field_73020_y", "chunkProvider");
+        //ReferenceReflection.fieldWorldChunkProvider = ReflectionHelper.findField(World.class, "v", "field_73020_y", "chunkProvider");
     }
 
     @SubscribeEvent
@@ -40,48 +38,17 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        int dimension = event.world.provider.dimensionId;
-
-        if (event.world.isRemote == false)
-        {
-            overrideChunkProvider(dimension, event.world);
-        }
-
-        if (Configs.getEffectiveMainConfig().useGenLayer == true)
-        {
-            return;
-        }
-
-        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
-        {
-            if (dimension == i)
-            {
-                PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s ...",
-                        event.world.provider.worldChunkMgr.getClass().toString(), dimension, WorldChunkManagerPaintedBiomes.class.toString()));
-
-                // Re-initialize the ImageHandler after a world loads, to update config values etc.
-                ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
-
-                // Don't accidentally re-wrap our own WorldChunkManager...
-                if ((event.world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes) == false)
-                {
-                    event.world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(event.world, event.world.provider.worldChunkMgr, imageHandler);
-                }
-
-                break;
-            }
-        }
+        overrideChunkProvider(event.world);
+        overrideWorldChunkManager(event.world);
     }
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
-        if (Configs.getEffectiveMainConfig().useGenLayer == true)
+        if (Configs.getEffectiveMainConfig().useGenLayer == false)
         {
-            return;
+            ImageHandler.removeImageHandler(event.world.provider.dimensionId);
         }
-
-        ImageHandler.removeImageHandler(event.world.provider.dimensionId);
     }
 
     @SubscribeEvent
@@ -99,10 +66,42 @@ public class PaintedBiomesEventHandler
         event.newBiomeGens[2] = event.newBiomeGens[0];
     }
 
-    private static void overrideChunkProvider(int dimension, World world)
+    private static void overrideWorldChunkManager(World world)
     {
+        if (Configs.getEffectiveMainConfig().useGenLayer == true)
+        {
+            return;
+        }
+
+        int dimension = world.provider.dimensionId;
+
+        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
+        {
+            if (dimension == i)
+            {
+                PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s ...",
+                        world.provider.worldChunkMgr.getClass().toString(), dimension, WorldChunkManagerPaintedBiomes.class.toString()));
+
+                // Re-initialize the ImageHandler after a world loads, to update config values etc.
+                ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
+
+                // Don't accidentally re-wrap our own WorldChunkManager...
+                if ((world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes) == false)
+                {
+                    world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(world, world.provider.worldChunkMgr, imageHandler);
+                }
+
+                break;
+            }
+        }
+    }
+
+    private static void overrideChunkProvider(World world)
+    {
+        int dimension = world.provider.dimensionId;
+
         Configs conf = Configs.getConfig(dimension);
-        if (conf.overrideChunkProvider == true)
+        if (conf.overrideChunkProvider == true && world instanceof WorldServer)
         {
             PaintedBiomes.logger.info("Attempting to override the ChunkProvider for dimension " + dimension);
 
@@ -113,8 +112,7 @@ public class PaintedBiomesEventHandler
                 return;
             }
 
-            /*
-            try
+            /*try
             {
                 ReferenceReflection.fieldWorldChunkProvider.setAccessible(true);
                 ReferenceReflection.fieldWorldChunkProvider.set(world, newChunkProvider);
@@ -123,15 +121,9 @@ public class PaintedBiomesEventHandler
             {
                 PaintedBiomes.logger.error("Failed to override the used ChunkProvider for World (" + world + ") in dimension " + dimension);
                 return;
-            }
-            */
+            }*/
 
-            if (world instanceof WorldServer)
-            {
-                WorldServer worldServer = (WorldServer)world;
-                worldServer.theChunkProviderServer.currentChunkProvider = newChunkProvider;
-                //worldServer.theChunkProviderServer = new ChunkProviderServer(worldServer, worldServer.theChunkProviderServer.currentChunkLoader, newChunkProvider);
-            }
+            ((WorldServer)world).theChunkProviderServer.currentChunkProvider = newChunkProvider;
         }
     }
 
