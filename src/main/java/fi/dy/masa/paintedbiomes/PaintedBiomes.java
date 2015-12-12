@@ -27,7 +27,6 @@ public class PaintedBiomes
         instance = this;
         logger = event.getModLog();
         Configs.setConfigDir(event.getModConfigurationDirectory());
-        Configs.reload(); // This is somewhat redundant, but let's do it anyway to generate the config at startup, if it's missing
 
         PaintedBiomesEventHandler handler = new PaintedBiomesEventHandler();
         MinecraftForge.EVENT_BUS.register(handler);
