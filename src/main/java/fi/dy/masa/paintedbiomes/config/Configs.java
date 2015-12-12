@@ -9,6 +9,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.io.File;
 
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -53,6 +54,7 @@ public class Configs
     {
         this.configFile = configFile;
         this.isMaster = isMaster;
+        this.enabledInDimensions = new int[0];
         this.templateUndefinedAreaBiome = -1;
         this.unpaintedAreaBiome = -1;
         this.useSingleTemplateImage = true;
@@ -79,12 +81,20 @@ public class Configs
     /**
      * Initialize the configuration directory and file locations. Call once for example from preInit.
      */
-    public static void init(File modConfigDir, File worldDir)
+    public static void setConfigDir(File modConfigDir)
     {
         globalConfigDir = new File(modConfigDir, Reference.MOD_ID);
-        worldConfigDir = new File(worldDir, Reference.MOD_ID);
         globalConfigFile = new File(globalConfigDir, Reference.MOD_ID + ".cfg");
-        worldConfigFile = new File(worldConfigDir, Reference.MOD_ID + ".cfg");
+    }
+
+    private static void setWorldDir()
+    {
+        File worldDir = DimensionManager.getCurrentSaveRootDirectory();
+        if (worldDir != null)
+        {
+            worldConfigDir = new File(worldDir, Reference.MOD_ID);
+            worldConfigFile = new File(worldConfigDir, Reference.MOD_ID + ".cfg");
+        }
     }
 
     /**
@@ -93,15 +103,17 @@ public class Configs
      */
     public static void reload()
     {
+        setWorldDir();
+
         globalConfigs = new Configs(globalConfigFile, true).loadConfigs();
-        worldConfigs = (worldConfigFile.exists() == true && worldConfigFile.isFile() == true) ? new Configs(worldConfigFile, true).loadConfigs() : null;
+        worldConfigs = (worldConfigFile != null && worldConfigFile.exists() == true && worldConfigFile.isFile() == true) ? new Configs(worldConfigFile, true).copyFrom(globalConfigs).loadConfigs() : null;
 
         globalPerDimConfigs.clear();
         worldPerDimConfigs.clear();
 
         loadPerDimensionConfigs();
 
-        ImageHandler.setTemplateBasePath(getTemplateBasePath());
+        ImageHandler.setTemplateBasePaths(new File(globalConfigDir, "templates"), new File(worldConfigDir, "templates"));
     }
 
     private static void loadPerDimensionConfigs()
@@ -135,17 +147,6 @@ public class Configs
         }
     }
 
-    private static String getTemplateBasePath()
-    {
-        File path = new File(worldConfigDir, "templates");
-        if (path.exists() == true && path.isDirectory() == true)
-        {
-            return path.getAbsolutePath();
-        }
-
-        return new File(globalConfigDir, "templates").getAbsolutePath();
-    }
-
     public static Configs getConfig(int dimension)
     {
         Configs conf = worldPerDimConfigs.get(dimension);
@@ -174,6 +175,7 @@ public class Configs
         this.overrideChunkProvider      = old.overrideChunkProvider;
         this.chunkProviderType          = old.chunkProviderType;
         this.chunkProviderOptions       = old.chunkProviderOptions;
+        this.enabledInDimensions        = old.enabledInDimensions.clone();
 
         return this;
     }
@@ -254,7 +256,7 @@ public class Configs
         // These config values only exist and are used in the non-per-dimension configs
         if (this.isMaster == true)
         {
-            prop = conf.get(category, "enabledInDimensions", new int[0]);
+            prop = conf.get(category, "enabledInDimensions", this.enabledInDimensions);
             prop.comment = "A list of dimensions where Painted Biomes should be enabled.";
             this.enabledInDimensions = prop.getIntList();
 

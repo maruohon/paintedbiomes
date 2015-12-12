@@ -1,6 +1,5 @@
 package fi.dy.masa.paintedbiomes;
 
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 
 import org.apache.logging.log4j.Logger;
@@ -27,7 +26,7 @@ public class PaintedBiomes
     {
         instance = this;
         logger = event.getModLog();
-        Configs.init(event.getModConfigurationDirectory(), DimensionManager.getCurrentSaveRootDirectory());
+        Configs.setConfigDir(event.getModConfigurationDirectory());
         Configs.reload(); // This is somewhat redundant, but let's do it anyway to generate the config at startup, if it's missing
 
         PaintedBiomesEventHandler handler = new PaintedBiomesEventHandler();

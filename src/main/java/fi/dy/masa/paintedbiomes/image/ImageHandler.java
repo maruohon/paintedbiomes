@@ -1,6 +1,5 @@
 package fi.dy.masa.paintedbiomes.image;
 
-import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -13,8 +12,9 @@ public class ImageHandler implements IImageReader
     private ImageCache regionImageCache;
     private IImageReader singleImage;
 
-    private static String templateBasePath;
-    private String templatePath;
+    private static File templateBasePathGlobal;
+    private static File templateBasePathWorld;
+    private File templatePath;
     private int dimension;
 
     private boolean useSingleTemplateImage;
@@ -42,23 +42,20 @@ public class ImageHandler implements IImageReader
         imageHandlers.remove(dimension);
     }
 
-    public static void setTemplateBasePath(String path)
+    public static void setTemplateBasePaths(File pathGlobal, File pathWorld)
     {
-        templateBasePath = path;
+        templateBasePathGlobal = pathGlobal;
+        templateBasePathWorld = pathWorld;
     }
 
     protected void createAndSetTemplateDir()
     {
-        File file = new File(templateBasePath, "DIM" + this.dimension);
-        if (file.exists() == false)
-        {
-            if (file.mkdirs() == false)
-            {
-                PaintedBiomes.logger.error("Error creating template directory '" + file.getAbsolutePath() + "'.");
-            }
-        }
+        this.templatePath = new File(templateBasePathWorld, "dim" + this.dimension);
 
-        this.templatePath = file.getAbsolutePath();
+        if (this.templatePath.exists() == false || this.templatePath.isDirectory() == false)
+        {
+            this.templatePath = new File(templateBasePathGlobal, "dim" + this.dimension);
+        }
     }
 
     public ImageHandler init()

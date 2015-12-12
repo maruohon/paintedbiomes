@@ -22,7 +22,7 @@ public class ImageRegion implements IImageReader
     protected int unpaintedAreaBiomeID;
     protected int templateUndefinedAreaBiomeID;
 
-    public ImageRegion(int dimension, int regionX, int regionZ, String path)
+    public ImageRegion(int dimension, int regionX, int regionZ, File path)
     {
         this.dimension = dimension;
         this.name = "r." + regionX + "." + regionZ;

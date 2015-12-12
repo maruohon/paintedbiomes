@@ -1,5 +1,6 @@
 package fi.dy.masa.paintedbiomes.image;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -11,9 +12,9 @@ public class ImageCache
 {
     protected Map<RegionCoords, IImageReader> imageRegions;
     protected Map<RegionCoords, Long> timeouts;
-    protected String path;
+    protected File path;
 
-    public ImageCache(String path)
+    public ImageCache(File path)
     {
         this.imageRegions = new HashMap<RegionCoords, IImageReader>();
         this.timeouts = new HashMap<RegionCoords, Long>();
