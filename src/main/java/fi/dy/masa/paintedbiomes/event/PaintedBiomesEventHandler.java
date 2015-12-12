@@ -7,6 +7,7 @@ import net.minecraft.world.gen.ChunkProviderEnd;
 import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderHell;
+import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -21,11 +22,6 @@ import fi.dy.masa.paintedbiomes.world.WorldChunkManagerPaintedBiomes;
 
 public class PaintedBiomesEventHandler
 {
-    public PaintedBiomesEventHandler()
-    {
-        //ReferenceReflection.fieldWorldChunkProvider = ReflectionHelper.findField(World.class, "v", "field_73020_y", "chunkProvider");
-    }
-
     @SubscribeEvent
     public void onServerTick(ServerTickEvent event)
     {
@@ -103,8 +99,6 @@ public class PaintedBiomesEventHandler
         Configs conf = Configs.getConfig(dimension);
         if (conf.overrideChunkProvider == true && world instanceof WorldServer)
         {
-            PaintedBiomes.logger.info("Attempting to override the ChunkProvider for dimension " + dimension);
-
             IChunkProvider newChunkProvider = getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
             if (newChunkProvider == null)
             {
@@ -112,18 +106,19 @@ public class PaintedBiomesEventHandler
                 return;
             }
 
-            /*try
-            {
-                ReferenceReflection.fieldWorldChunkProvider.setAccessible(true);
-                ReferenceReflection.fieldWorldChunkProvider.set(world, newChunkProvider);
-            }
-            catch (IllegalAccessException e)
-            {
-                PaintedBiomes.logger.error("Failed to override the used ChunkProvider for World (" + world + ") in dimension " + dimension);
-                return;
-            }*/
+            PaintedBiomes.logger.info("Attempting to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass());
 
-            ((WorldServer)world).theChunkProviderServer.currentChunkProvider = newChunkProvider;
+            try
+            {
+                ((WorldServer)world).theChunkProviderServer.currentChunkProvider = newChunkProvider;
+                ((ChunkProviderServer)world.getChunkProvider()).currentChunkProvider = newChunkProvider;
+            }
+            catch (Exception e)
+            {
+                PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass());
+                PaintedBiomes.logger.warn("" + e.getMessage());
+                //e.printStackTrace();
+            }
         }
     }
 
