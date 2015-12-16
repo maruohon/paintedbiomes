@@ -55,7 +55,7 @@ public class PaintedBiomesEventHandler
             return;
         }
 
-        PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers...");
+        PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
         ImageHandler.getImageHandler(0).init();
         event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType);
         event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType);
@@ -75,7 +75,7 @@ public class PaintedBiomesEventHandler
         {
             if (dimension == i)
             {
-                PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s ...",
+                PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s",
                         world.provider.worldChunkMgr.getClass().toString(), dimension, WorldChunkManagerPaintedBiomes.class.toString()));
 
                 // Re-initialize the ImageHandler after a world loads, to update config values etc.

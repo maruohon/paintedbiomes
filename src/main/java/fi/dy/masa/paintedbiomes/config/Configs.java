@@ -1,13 +1,12 @@
 package fi.dy.masa.paintedbiomes.config;
 
+import java.io.File;
+
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.map.hash.TIntObjectHashMap;
-
-import java.io.File;
-
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.config.ConfigCategory;
@@ -85,6 +84,7 @@ public class Configs
     {
         globalConfigDir = new File(modConfigDir, Reference.MOD_ID);
         globalConfigFile = new File(globalConfigDir, Reference.MOD_ID + ".cfg");
+        globalConfigs = new Configs(globalConfigFile, true).loadConfigs();
     }
 
     private static void setWorldDir()
@@ -182,7 +182,7 @@ public class Configs
 
     private Configs loadConfigs()
     {
-        PaintedBiomes.logger.info("Loading configuration from '" + this.configFile.getAbsolutePath() + "' ...");
+        PaintedBiomes.logger.info("Loading configuration from '" + this.configFile.getAbsolutePath() + "'");
 
         Configuration conf = new Configuration(this.configFile, null, true); // true: Use case sensitive category names
         conf.load();
