@@ -301,8 +301,10 @@ public class Configs
 
         // Iterate over the biome array and add a color-to-biome mapping for all of them
         BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
-        for (BiomeGenBase biome : biomes)
+
+        for (int i = 0; i < biomes.length; i++)
         {
+            BiomeGenBase biome = biomes[i];
             if (biome == null)
             {
                 continue;
@@ -343,9 +345,39 @@ public class Configs
                 configCategory.put(biome.biomeName, prop);
             }
 
-            // For simplicity, when generating terrain, the biome is always read from the mapping, even in case of a red channel mapping.
-            // So basically we want to always add all the existing biomes to the color-to-biome map.
-            colorToBiomeMapping.addMapping(color, biome.biomeID);
+            int oldId = colorToBiomeMapping.getBiomeIDForColor(color);
+            // The color is already in use, print a warning
+            if (oldId != -1)
+            {
+                int pos = 0;
+                for (int j = 0; j < biomes.length; j++)
+                {
+                    if (biomes[j] != null && biomes[j].biomeID == oldId)
+                    {
+                        pos = j;
+                        break;
+                    }
+                }
+
+                BiomeGenBase oldBiome = (oldId >= 0 && oldId < biomes.length) ? biomes[oldId] : null;
+                String biomeName = oldBiome != null ? oldBiome.biomeName : "well this is an error as well... biome ID was out of valid range";
+
+                // Don't print the warning due to the vanilla bug of having "Mega Spruce Taiga" at positions 160 and 161...
+                if (oldId != 160 || "Mega Spruce Taiga".equals(biomeName) == false)
+                {
+                    PaintedBiomes.logger.warn("**** WARNING **** WARNING **** WARNING ****");
+                    PaintedBiomes.logger.warn(String.format("The color %06X (%d) (attempted to use for biome '%s', ID: %d, at position %d in the biome array) is already in use!", color, color, biome.biomeName, biome.biomeID, i));
+                    PaintedBiomes.logger.warn(String.format("The biome already using it is '%s', ID %d, at position %d in the biome array.", biomeName, oldId, pos));
+                    PaintedBiomes.logger.warn("This new color mapping HAS NOT been added to the active mappings. Please fix this conflict in the configuration file!");
+                    PaintedBiomes.logger.warn("-------------------------------------------");
+                }
+            }
+            else
+            {
+                // For simplicity, when generating terrain, the biome is always read from the mapping, even in case of a red channel mapping.
+                // So basically we want to always add all the existing biomes to the color-to-biome map.
+                colorToBiomeMapping.addMapping(color, biome.biomeID);
+            }
 
             // Update the comment, in case the biome ID has been changed since the config was first generated
             prop.comment = "Biome name: " + biome.biomeName + ", Biome ID: " + biome.biomeID + " (Color as int: " + color + ")";
