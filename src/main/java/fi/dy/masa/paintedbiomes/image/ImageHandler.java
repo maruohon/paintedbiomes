@@ -1,10 +1,10 @@
 package fi.dy.masa.paintedbiomes.image;
 
+import java.io.File;
+
 import fi.dy.masa.paintedbiomes.config.Configs;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
-
-import java.io.File;
 
 public class ImageHandler implements IImageReader
 {
@@ -50,9 +50,16 @@ public class ImageHandler implements IImageReader
 
     protected void createAndSetTemplateDir()
     {
-        this.templatePath = new File(templateBasePathWorld, "dim" + this.dimension);
+        if (templateBasePathWorld != null)
+        {
+            this.templatePath = new File(templateBasePathWorld, "dim" + this.dimension);
+        }
+        else
+        {
+            this.templatePath = null;
+        }
 
-        if (this.templatePath.exists() == false || this.templatePath.isDirectory() == false)
+        if (this.templatePath == null || this.templatePath.exists() == false || this.templatePath.isDirectory() == false)
         {
             this.templatePath = new File(templateBasePathGlobal, "dim" + this.dimension);
         }

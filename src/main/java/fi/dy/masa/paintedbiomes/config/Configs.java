@@ -2,12 +2,13 @@ package fi.dy.masa.paintedbiomes.config;
 
 import java.io.File;
 
+import net.minecraft.world.biome.BiomeGenBase;
+
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
@@ -95,11 +96,16 @@ public class Configs
             worldConfigDir = new File(worldDir, Reference.MOD_ID);
             worldConfigFile = new File(worldConfigDir, Reference.MOD_ID + ".cfg");
         }
+        else
+        {
+            worldConfigDir = null;
+            worldConfigFile = null;
+        }
     }
 
     /**
      * Re-create the configuration instances and re-read all the configuration files.
-     * Can only be called after calling init() once.
+     * Can only be called after calling setConfigDir() once.
      */
     public static void reload()
     {
@@ -108,16 +114,16 @@ public class Configs
         globalConfigs = new Configs(globalConfigFile, true).loadConfigs();
         worldConfigs = (worldConfigFile != null && worldConfigFile.exists() == true && worldConfigFile.isFile() == true) ? new Configs(worldConfigFile, true).copyFrom(globalConfigs).loadConfigs() : null;
 
-        globalPerDimConfigs.clear();
-        worldPerDimConfigs.clear();
-
         loadPerDimensionConfigs();
 
-        ImageHandler.setTemplateBasePaths(new File(globalConfigDir, "templates"), new File(worldConfigDir, "templates"));
+        File worldTemplateDir = (worldConfigDir != null) ? new File(worldConfigDir, "templates") : null;
+        ImageHandler.setTemplateBasePaths(new File(globalConfigDir, "templates"), worldTemplateDir);
     }
 
     private static void loadPerDimensionConfigs()
     {
+        globalPerDimConfigs.clear();
+
         Configs mainConfig = globalConfigs;
         for (int dimension : mainConfig.enabledInDimensions)
         {
@@ -130,6 +136,13 @@ public class Configs
                     globalPerDimConfigs.put(dimension, new Configs(globalConfigDir, dimension).copyFrom(mainConfig).loadConfigs());
                 }
             }
+        }
+
+        worldPerDimConfigs.clear();
+
+        if (worldConfigDir == null)
+        {
+            return;
         }
 
         mainConfig = getEffectiveMainConfig();
@@ -250,7 +263,7 @@ public class Configs
         this.chunkProviderType = prop.getString() != null ? prop.getString() : "";
 
         prop = conf.get(category, "chunkProviderOptions", this.chunkProviderOptions);
-        prop.comment = "Extra options for the ChunkProvider (mostly for VANILLA_FLAT).";
+        prop.comment = "Extra options for the ChunkProvider (only used for VANILLA_FLAT).";
         this.chunkProviderOptions = prop.getString() != null ? prop.getString() : "";
 
         // These config values only exist and are used in the non-per-dimension configs
