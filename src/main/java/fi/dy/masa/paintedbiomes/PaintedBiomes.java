@@ -17,7 +17,8 @@ import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 
 
-@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION, acceptableRemoteVersions="*")
+@Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
+    acceptableRemoteVersions="*", acceptedMinecraftVersions = "[1.8,1.8.8,1.8.9]")
 public class PaintedBiomes
 {
     @Instance(Reference.MOD_ID)
