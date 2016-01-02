@@ -11,27 +11,12 @@ public class ImageSingleRepeating extends ImageSingle
     public static final int POSX = 0x02;
     public static final int POSZ = 0x08;
 
-    public static final int CORNER_NEGX_NEGZ = NEGX | NEGZ;
-    public static final int CORNER_POSX_NEGZ = POSX | NEGZ;
-    public static final int CORNER_NEGX_POSZ = NEGX | POSZ;
-    public static final int CORNER_POSX_POSZ = POSX | POSZ;
-
     protected int repeatTemplate;
     protected int repeatEdge;
 
-    /*protected boolean repeatTemplatePositiveX;
-    protected boolean repeatTemplatePositiveZ;
-    protected boolean repeatTemplateNegativeX;
-    protected boolean repeatTemplateNegativeZ;
-
-    protected boolean repeatEdgePositiveX;
-    protected boolean repeatEdgePositiveZ;
-    protected boolean repeatEdgeNegativeX;
-    protected boolean repeatEdgeNegativeZ;*/
-
-    public ImageSingleRepeating(File imageFile)
+    public ImageSingleRepeating(int dimension, File imageFile)
     {
-        super(imageFile);
+        super(dimension, imageFile);
     }
 
     @Override
@@ -39,18 +24,7 @@ public class ImageSingleRepeating extends ImageSingle
     {
         super.reload();
 
-        Configs conf = Configs.getInstance();
-        /*this.repeatTemplatePositiveX = this.repeatTemplatePositiveZ = this.repeatTemplateNegativeX = this.repeatEdgeNegativeZ = false;
-        this.repeatEdgePositiveX = this.repeatEdgePositiveZ = this.repeatEdgeNegativeX = this.repeatEdgeNegativeZ= false;
-        if (conf.repeatTemplatePositiveX == 1) this.repeatTemplatePositiveX = true;
-        if (conf.repeatTemplatePositiveZ == 1) this.repeatTemplatePositiveZ = true;
-        if (conf.repeatTemplateNegativeX == 1) this.repeatTemplateNegativeX = true;
-        if (conf.repeatTemplateNegativeZ == 1) this.repeatTemplateNegativeZ = true;
-
-        if (conf.repeatTemplatePositiveX == 2) this.repeatEdgePositiveX = true;
-        if (conf.repeatTemplatePositiveZ == 2) this.repeatEdgePositiveZ = true;
-        if (conf.repeatTemplateNegativeX == 2) this.repeatEdgeNegativeX = true;
-        if (conf.repeatTemplateNegativeZ == 2) this.repeatEdgeNegativeZ = true;*/
+        Configs conf = Configs.getConfig(this.dimension);
 
         this.repeatTemplate = 0;
         this.repeatEdge = 0;
@@ -92,14 +66,74 @@ public class ImageSingleRepeating extends ImageSingle
     }
 
     @Override
-    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    public boolean isBiomeDefinedAt(int blockX, int blockZ)
     {
+        if (this.imageData == null)
+        {
+            return this.unpaintedAreaBiomeID != -1;
+        }
+
         int area = this.getArea(blockX, blockZ);
 
+        // The given coordinates are covered by a template image
+        if (area == 0)
+        {
+            return this.isBiomeDefinedByTemplateAt(blockX - this.minX, blockZ - this.minZ);
+        }
+
+        // The given coordinates are not covered by a template image, figure out if there is a valid repeating option for the given location
+
+        // Template repeating enabled, and the given location is covered by the repeat setting.
+        // Note: This means that either the area is on one of the sides from the template, (ie. inside the template's coverage
+        // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
+        if (this.repeatTemplate != 0 && (this.repeatTemplate & area) == area)
+        {
+            int x = ((blockX - this.minX) % this.imageWidth + this.imageWidth) % this.imageWidth;
+            int y = ((blockZ - this.minZ) % this.imageHeight + this.imageHeight) % this.imageHeight;
+            return this.isBiomeDefinedByTemplateAt(x, y);
+        }
+
+        // Template edge repeating enabled, and the given location is covered by the repeat setting.
+        // Note: This means that either the area is on one of the sides from the template, (ie. inside the template's coverage
+        // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
+        if (this.repeatEdge != 0 && (this.repeatEdge & area) == area)
+        {
+            int x = blockX - this.minX;
+            int y = blockZ - this.minZ;
+
+            if (blockX < this.minX)
+            {
+                x = 0;
+            }
+            else if (blockX > this.maxX)
+            {
+                x = this.imageWidth - 1;
+            }
+
+            if (blockZ < this.minZ)
+            {
+                y = 0;
+            }
+            else if (blockZ > this.maxZ)
+            {
+                y = this.imageHeight - 1;
+            }
+
+            return this.isBiomeDefinedByTemplateAt(x, y);
+        }
+
+        return this.unpaintedAreaBiomeID != -1;
+    }
+
+    @Override
+    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    {
         if (this.imageData == null)
         {
             return this.getUnpaintedAreaBiomeID(defaultBiomeID);
         }
+
+        int area = this.getArea(blockX, blockZ);
 
         // The given coordinates are covered by a template image
         if (area == 0)

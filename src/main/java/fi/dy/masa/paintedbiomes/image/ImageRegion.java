@@ -12,8 +12,8 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageRegion implements IImageReader
 {
+    protected int dimension;
     protected String name;
-    protected File imageFile;
 
     protected BufferedImage imageData;
     protected int imageWidth;
@@ -22,14 +22,14 @@ public class ImageRegion implements IImageReader
     protected int unpaintedAreaBiomeID;
     protected int templateUndefinedAreaBiomeID;
 
-    public ImageRegion(int regionX, int regionZ, String path)
+    public ImageRegion(int dimension, int regionX, int regionZ, File path)
     {
+        this.dimension = dimension;
         this.name = "r." + regionX + "." + regionZ;
-        this.imageFile = new File(path, this.name + ".png");
 
-        this.readImageTemplate(this.imageFile);
-        this.unpaintedAreaBiomeID = Configs.getInstance().unpaintedAreaBiome;
-        this.templateUndefinedAreaBiomeID = Configs.getInstance().templateUndefinedAreaBiome;
+        this.readImageTemplate(new File(path, this.name + ".png"));
+        this.unpaintedAreaBiomeID = Configs.getConfig(this.dimension).unpaintedAreaBiome;
+        this.templateUndefinedAreaBiomeID = Configs.getConfig(this.dimension).templateUndefinedAreaBiome;
     }
 
     public void readImageTemplate(File imageFile)
@@ -46,7 +46,7 @@ public class ImageRegion implements IImageReader
                 {
                     this.imageWidth = this.imageData.getWidth();
                     this.imageHeight = this.imageData.getHeight();
-                    //PaintedBiomes.logger.info("Successfully read image template for region '" + this.name + "' from '" + imageFile.getAbsolutePath() + "'");
+                    PaintedBiomes.logger.info("Successfully read image template for region '" + this.name + "' from '" + imageFile.getAbsolutePath() + "'");
 
                     return;
                 }
@@ -60,33 +60,26 @@ public class ImageRegion implements IImageReader
         }
     }
 
-    public boolean areCoordinatesInsideTemplate(int blockX, int blockZ)
+    protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
     {
-        blockX = (blockX % 512 + 512) % 512;
-        blockZ = (blockZ % 512 + 512) % 512;
-
-        return this.imageData != null && blockX < this.imageWidth && blockZ < this.imageHeight;
+        // If there is a biome defined for unpainted areas, then use that, otherwise use the biome from the regular terrain generation
+        return this.unpaintedAreaBiomeID != -1 ? this.unpaintedAreaBiomeID : defaultBiomeID;
     }
 
-    @Override
-    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    protected int getUndefinedAreaBiomeID(int defaultBiomeID)
     {
-        if (this.areCoordinatesInsideTemplate(blockX, blockZ) == false)
-        {
-            // Default biome defined for areas outside of the template image
-            if (this.unpaintedAreaBiomeID != -1)
-            {
-                return this.unpaintedAreaBiomeID;
-            }
+        // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
+        return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
+    }
 
-            return defaultBiomeID;
-        }
-
-        //System.out.println("ImageRegion.getBiomeAt(" + blockX + ", " + blockZ + ")");
-        int x = (blockX % 512 + 512) % 512;
-        int y = (blockZ % 512 + 512) % 512;
-
+    protected int getBiomeIdFromTemplateImage(int blockX, int blockZ, int defaultBiomeID)
+    {
+        //int x = (blockX % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        //int y = (blockZ % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        int x = blockX & 0x1FF;
+        int y = blockZ & 0x1FF;
         int[] alpha = new int[1];
+
         try
         {
             WritableRaster raster = this.imageData.getAlphaRaster();
@@ -104,7 +97,7 @@ public class ImageRegion implements IImageReader
             PaintedBiomes.logger.fatal("Error reading the alpha channel of the template image");
         }
 
-        // Completely transparent pixel, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
+        // Completely transparent pixel
         if (alpha[0] == 0x00)
         {
             return this.getUndefinedAreaBiomeID(defaultBiomeID);
@@ -112,18 +105,67 @@ public class ImageRegion implements IImageReader
 
         int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y));
 
-        // Undefined color mapping, use either the templateUndefinedAreaBiome or the default biome from the terrain generator
-        if (biomeID == -1)
-        {
-            return this.getUndefinedAreaBiomeID(defaultBiomeID);
-        }
-
-        return biomeID;
+        return biomeID != -1 ? biomeID : this.getUndefinedAreaBiomeID(defaultBiomeID);
     }
 
-    protected int getUndefinedAreaBiomeID(int defaultBiomeID)
+    public boolean isLocationCoveredByTemplate(int blockX, int blockZ)
     {
-        // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
-        return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
+        //int x = (blockX % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        //int z = (blockZ % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        int x = blockX & 0x1FF;
+        int z = blockZ & 0x1FF;
+
+        return this.imageData != null && x < this.imageWidth && z < this.imageHeight;
+    }
+
+    @Override
+    public boolean isBiomeDefinedAt(int blockX, int blockZ)
+    {
+        if (this.isLocationCoveredByTemplate(blockX, blockZ) == false)
+        {
+            return this.unpaintedAreaBiomeID != -1;
+        }
+
+        //int x = (blockX % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        //int y = (blockZ % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        int x = blockX & 0x1FF;
+        int y = blockZ & 0x1FF;
+        int[] alpha = new int[1];
+
+        try
+        {
+            WritableRaster raster = this.imageData.getAlphaRaster();
+            if (raster != null)
+            {
+                raster.getPixel(x, y, alpha);
+            }
+            else
+            {
+                alpha[0] = 0xFF;
+            }
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            PaintedBiomes.logger.fatal("Error reading the alpha channel of the template image");
+        }
+
+        // Completely transparent pixel
+        if (alpha[0] == 0x00)
+        {
+            return this.templateUndefinedAreaBiomeID != -1;
+        }
+
+        return ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(x, y)) != -1;
+    }
+
+    @Override
+    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
+    {
+        if (this.isLocationCoveredByTemplate(blockX, blockZ) == false)
+        {
+            return this.getUnpaintedAreaBiomeID(defaultBiomeID);
+        }
+
+        return this.getBiomeIdFromTemplateImage(blockX, blockZ, defaultBiomeID);
     }
 }

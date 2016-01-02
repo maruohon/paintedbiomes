@@ -1,5 +1,6 @@
 package fi.dy.masa.paintedbiomes.image;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,28 +10,30 @@ import fi.dy.masa.paintedbiomes.util.RegionCoords;
 
 public class ImageCache
 {
-    private Map<RegionCoords, IImageReader> imageRegions;
-    private Map<RegionCoords, Long> timeouts;
+    protected Map<RegionCoords, IImageReader> imageRegions;
+    protected Map<RegionCoords, Long> timeouts;
+    protected File path;
 
-    public ImageCache()
+    public ImageCache(File path)
     {
         this.imageRegions = new HashMap<RegionCoords, IImageReader>();
         this.timeouts = new HashMap<RegionCoords, Long>();
+        this.path = path;
     }
 
-    public boolean contains(int blockX, int blockZ)
+    public boolean contains(int dimension, int blockX, int blockZ)
     {
-        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(blockX, blockZ));
+        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(dimension, blockX, blockZ));
     }
 
-    public IImageReader getRegionImage(int blockX, int blockZ, String path)
+    public IImageReader getRegionImage(int dimension, int blockX, int blockZ)
     {
-        RegionCoords regionCoords = RegionCoords.fromBlockCoords(blockX, blockZ);
+        RegionCoords regionCoords = RegionCoords.fromBlockCoords(dimension, blockX, blockZ);
         IImageReader imageRegion = this.imageRegions.get(regionCoords);
 
         if (imageRegion == null)
         {
-            imageRegion = new ImageRegion(regionCoords.regionX, regionCoords.regionZ, path);
+            imageRegion = new ImageRegion(regionCoords.dimension, regionCoords.regionX, regionCoords.regionZ, this.path);
             this.imageRegions.put(regionCoords, imageRegion);
         }
 
