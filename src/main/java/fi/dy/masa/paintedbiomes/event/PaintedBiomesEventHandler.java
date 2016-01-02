@@ -8,8 +8,6 @@ import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderHell;
 import net.minecraft.world.gen.ChunkProviderServer;
-import net.minecraftforge.event.terraingen.WorldTypeEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
@@ -19,6 +17,8 @@ import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 import fi.dy.masa.paintedbiomes.world.WorldChunkManagerPaintedBiomes;
+import net.minecraftforge.event.terraingen.WorldTypeEvent;
+import net.minecraftforge.event.world.WorldEvent;
 
 public class PaintedBiomesEventHandler
 {
@@ -64,7 +64,8 @@ public class PaintedBiomesEventHandler
 
     private static void overrideWorldChunkManager(World world)
     {
-        if (Configs.getEffectiveMainConfig().useGenLayer == true)
+        // Not used when using a GenLayer override, and don't accidentally re-wrap our own WorldChunkManager...
+        if (Configs.getEffectiveMainConfig().useGenLayer == true || world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes)
         {
             return;
         }
@@ -76,16 +77,12 @@ public class PaintedBiomesEventHandler
             if (dimension == i)
             {
                 PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s",
-                        world.provider.worldChunkMgr.getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.toString()));
+                        world.provider.worldChunkMgr.getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.getName()));
 
                 // Re-initialize the ImageHandler after a world loads, to update config values etc.
                 ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
 
-                // Don't accidentally re-wrap our own WorldChunkManager...
-                if ((world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes) == false)
-                {
-                    world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(world, world.provider.worldChunkMgr, imageHandler);
-                }
+                world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(world, world.provider.worldChunkMgr, imageHandler);
 
                 break;
             }
@@ -96,6 +93,18 @@ public class PaintedBiomesEventHandler
     {
         int dimension = world.provider.dimensionId;
 
+        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
+        {
+            if (dimension == i)
+            {
+                overrideChunkProvider(dimension, world);
+                break;
+            }
+        }
+    }
+
+    private static void overrideChunkProvider(int dimension, World world)
+    {
         Configs conf = Configs.getConfig(dimension);
         if (conf.overrideChunkProvider == true && world instanceof WorldServer)
         {
@@ -116,7 +125,7 @@ public class PaintedBiomesEventHandler
             }
             catch (Exception e)
             {
-                PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass());
+                PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass().getName());
                 PaintedBiomes.logger.warn("" + e.getMessage());
                 //e.printStackTrace();
             }
