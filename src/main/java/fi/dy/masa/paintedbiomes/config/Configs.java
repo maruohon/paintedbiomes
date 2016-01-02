@@ -367,7 +367,7 @@ public class Configs
                 {
                     PaintedBiomes.logger.warn("**** WARNING **** WARNING **** WARNING ****");
                     PaintedBiomes.logger.warn(String.format("The color %06X (%d) (attempted to use for biome '%s', ID: %d, at position %d in the biome array) is already in use!", color, color, biome.biomeName, biome.biomeID, i));
-                    PaintedBiomes.logger.warn(String.format("The biome already using it is '%s', ID %d, at position %d in the biome array.", biomeName, oldId, pos));
+                    PaintedBiomes.logger.warn(String.format("The biome already using it is '%s', ID %d, first seen at position %d in the biome array.", biomeName, oldId, pos));
                     PaintedBiomes.logger.warn("This new color mapping HAS NOT been added to the active mappings. Please fix this conflict in the configuration file!");
                     PaintedBiomes.logger.warn("-------------------------------------------");
                 }

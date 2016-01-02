@@ -76,7 +76,7 @@ public class PaintedBiomesEventHandler
             if (dimension == i)
             {
                 PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s",
-                        world.provider.worldChunkMgr.getClass().toString(), dimension, WorldChunkManagerPaintedBiomes.class.toString()));
+                        world.provider.worldChunkMgr.getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.toString()));
 
                 // Re-initialize the ImageHandler after a world loads, to update config values etc.
                 ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
@@ -106,7 +106,8 @@ public class PaintedBiomesEventHandler
                 return;
             }
 
-            PaintedBiomes.logger.info("Attempting to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass());
+            PaintedBiomes.logger.info(String.format("Attempting to override the ChunkProvider (of type %s) of dimension %d with %s",
+                    ((WorldServer)world).theChunkProviderServer.currentChunkProvider.getClass().getName(), dimension, newChunkProvider.getClass().getName()));
 
             try
             {
