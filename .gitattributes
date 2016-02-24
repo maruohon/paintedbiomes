@@ -7,13 +7,16 @@
 *.bat text eol=crlf
 *.md text
 *.properties text
+.gitattributes text eol=lf
+.gitignore text eol=lf
 build.gradle text eol=lf
+build.properties text eol=lf
 gradlew text eol=lf
 gradlew.bat text eol=lf
 gradle/wrapper/gradle-wrapper.properties text eol=lf
-.gitattributes text eol=lf
 COPYING.txt text eol=lf
 COPYING.LESSER.txt text eol=lf
+mcmod.info text eol=lf
 README.md text eol=lf
 
 #binary

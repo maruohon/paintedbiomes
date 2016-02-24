@@ -2,7 +2,7 @@
 {
   "modid": "paintedbiomes",
   "name": "Painted Biomes",
-  "description": "Generates the world's biomes based on a template image",
+  "description": "Generates the world's biomes based on image template(s)",
   "version": "${mod_version}",
   "mcversion": "${minecraft_version}",
   "url": "",
