@@ -8,17 +8,20 @@ import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderHell;
 import net.minecraft.world.gen.ChunkProviderServer;
+
+import net.minecraftforge.event.terraingen.WorldTypeEvent;
+import net.minecraftforge.event.world.WorldEvent;
+
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
+
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 import fi.dy.masa.paintedbiomes.world.WorldChunkManagerPaintedBiomes;
-import net.minecraftforge.event.terraingen.WorldTypeEvent;
-import net.minecraftforge.event.world.WorldEvent;
 
 public class PaintedBiomesEventHandler
 {
@@ -34,6 +37,16 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
+        overrideChunkProvider(event.world);
+        overrideWorldChunkManager(event.world);
+    }
+
+    @SubscribeEvent
+    public void onCreateWorldSpawn(WorldEvent.CreateSpawnPosition event)
+    {
+        // The initial world spawn position is created before the WorldEvent.Load fires, so we
+        // need this event to cover that case. Otherwise a newly created world (no existing level.dat file yet)
+        // will have a mess of regular terrain generation chunks near the spawn chunk...
         overrideChunkProvider(event.world);
         overrideWorldChunkManager(event.world);
     }
@@ -76,17 +89,26 @@ public class PaintedBiomesEventHandler
         {
             if (dimension == i)
             {
-                PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s",
-                        world.provider.worldChunkMgr.getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.getName()));
-
-                // Re-initialize the ImageHandler after a world loads, to update config values etc.
-                ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
-
-                world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(world, world.provider.worldChunkMgr, imageHandler);
-
+                overrideWorldChunkManager(dimension, world);
                 break;
             }
         }
+    }
+
+    private static void overrideWorldChunkManager(int dimension, World world)
+    {
+        if (world.getWorldChunkManager() instanceof WorldChunkManagerPaintedBiomes)
+        {
+            return;
+        }
+
+        PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s",
+                world.getWorldChunkManager().getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.getName()));
+
+        // Re-initialize the ImageHandler when a world loads, to update config values etc.
+        ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
+
+        world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(world, world.getWorldChunkManager(), imageHandler);
     }
 
     private static void overrideChunkProvider(World world)
