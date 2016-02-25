@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -12,12 +13,16 @@ import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle implements IImageReader
 {
-    protected int dimension;
-    protected File imageFile;
+    protected final int dimension;
+    protected final long worldSeed;
+    protected final File imageFile;
+    protected final Random rand;
     protected BufferedImage imageData;
-    protected int imageWidth;
-    protected int imageHeight;
+    protected int areaSizeX;
+    protected int areaSizeZ;
 
+    protected boolean useTemplateRotation;
+    protected int templateRotation;
     protected int templateAlignmentMode;
     protected int templateAlignmentX;
     protected int templateAlignmentZ;
@@ -30,28 +35,33 @@ public class ImageSingle implements IImageReader
     protected int minZ;
     protected int maxZ;
 
-    public ImageSingle(int dimension, File imageFile)
+    public ImageSingle(int dimension, long seed, File imageFile)
     {
         this.dimension = dimension;
+        this.worldSeed = seed;
         this.imageFile = imageFile;
+        this.rand = new Random();
         this.reload();
     }
 
-    public void reload()
+    protected void reload()
     {
         this.readImageTemplate(this.imageFile);
 
         Configs conf = Configs.getConfig(this.dimension);
+        this.useTemplateRotation = conf.useTemplateRandomRotation;
         this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
         this.templateAlignmentMode = conf.templateAlignmentMode;
         this.templateAlignmentX = conf.templateAlignmentX;
         this.templateAlignmentZ = conf.templateAlignmentZ;
 
-        this.setBoundsFromImage();
+        this.templateRotation = this.getTemplateRandomRotation(this.templateAlignmentX, this.templateAlignmentZ);
+        this.getTemplateDimensions();
+        this.setAreaBounds();
     }
 
-    public void readImageTemplate(File imageFile)
+    protected void readImageTemplate(File imageFile)
     {
         this.imageData = null;
 
@@ -69,54 +79,133 @@ public class ImageSingle implements IImageReader
         }
     }
 
-    public void setBoundsFromImage()
+    protected void getTemplateDimensions()
     {
-        if (this.imageData != null)
+        if (this.imageData == null)
         {
-            this.imageWidth = this.imageData.getWidth();
-            this.imageHeight = this.imageData.getHeight();
-
-            // Centered
-            if (this.templateAlignmentMode == 0)
-            {
-                this.minX = this.templateAlignmentX - (this.imageWidth / 2);
-                this.minZ = this.templateAlignmentZ - (this.imageHeight / 2);
-                this.maxX = this.templateAlignmentX + (int)Math.ceil(((double)this.imageWidth / 2.0d)) - 1;
-                this.maxZ = this.templateAlignmentZ + (int)Math.ceil(((double)this.imageHeight / 2.0d)) - 1;
-            }
-            // The top left corner is at the set coordinates
-            else if (this.templateAlignmentMode == 1)
-            {
-                this.minX = this.templateAlignmentX;
-                this.minZ = this.templateAlignmentZ;
-                this.maxX = this.minX + this.imageWidth - 1;
-                this.maxZ = this.minZ + this.imageHeight - 1;
-            }
-            // The top right corner is at the set coordinates
-            else if (this.templateAlignmentMode == 2)
-            {
-                this.minX = this.templateAlignmentX - this.imageWidth;
-                this.minZ = this.templateAlignmentZ;
-                this.maxX = this.templateAlignmentX - 1;
-                this.maxZ = this.minZ + this.imageHeight - 1;
-            }
-            // The bottom right corner is at the set coordinates
-            else if (this.templateAlignmentMode == 3)
-            {
-                this.minX = this.templateAlignmentX - this.imageWidth;
-                this.minZ = this.templateAlignmentZ - this.imageHeight;
-                this.maxX = this.templateAlignmentX - 1;
-                this.maxZ = this.templateAlignmentZ - 1;
-            }
-            // The bottom left corner is at the set coordinates
-            else if (this.templateAlignmentMode == 4)
-            {
-                this.minX = this.templateAlignmentX;
-                this.minZ = this.templateAlignmentZ - this.imageHeight;
-                this.maxX = this.minX + this.imageWidth - 1;
-                this.maxZ = this.templateAlignmentZ - 1;
-            }
+            PaintedBiomes.logger.warn("Failed to get area bounds from template image");
+            return;
         }
+
+        // 0 degree or 180 degree template rotation
+        if ((this.templateRotation & 0x1) == 0)
+        {
+            this.areaSizeX = this.imageData.getWidth();
+            this.areaSizeZ = this.imageData.getHeight();
+        }
+        // 90 or 270 degree template rotation
+        else
+        {
+            this.areaSizeX = this.imageData.getHeight();
+            this.areaSizeZ = this.imageData.getWidth();
+        }
+    }
+
+    protected void setAreaBounds()
+    {
+        // Centered
+        if (this.templateAlignmentMode == 0)
+        {
+            this.minX = this.templateAlignmentX - (this.areaSizeX / 2);
+            this.minZ = this.templateAlignmentZ - (this.areaSizeZ / 2);
+            this.maxX = this.templateAlignmentX + (int)Math.ceil(((double)this.areaSizeX / 2.0d)) - 1;
+            this.maxZ = this.templateAlignmentZ + (int)Math.ceil(((double)this.areaSizeZ / 2.0d)) - 1;
+        }
+        // The top left corner is at the set coordinates
+        else if (this.templateAlignmentMode == 1)
+        {
+            this.minX = this.templateAlignmentX;
+            this.minZ = this.templateAlignmentZ;
+            this.maxX = this.minX + this.areaSizeX - 1;
+            this.maxZ = this.minZ + this.areaSizeZ - 1;
+        }
+        // The top right corner is at the set coordinates
+        else if (this.templateAlignmentMode == 2)
+        {
+            this.minX = this.templateAlignmentX - this.areaSizeX;
+            this.minZ = this.templateAlignmentZ;
+            this.maxX = this.templateAlignmentX - 1;
+            this.maxZ = this.minZ + this.areaSizeZ - 1;
+        }
+        // The bottom right corner is at the set coordinates
+        else if (this.templateAlignmentMode == 3)
+        {
+            this.minX = this.templateAlignmentX - this.areaSizeX;
+            this.minZ = this.templateAlignmentZ - this.areaSizeZ;
+            this.maxX = this.templateAlignmentX - 1;
+            this.maxZ = this.templateAlignmentZ - 1;
+        }
+        // The bottom left corner is at the set coordinates
+        else if (this.templateAlignmentMode == 4)
+        {
+            this.minX = this.templateAlignmentX;
+            this.minZ = this.templateAlignmentZ - this.areaSizeZ;
+            this.maxX = this.minX + this.areaSizeX - 1;
+            this.maxZ = this.templateAlignmentZ - 1;
+        }
+    }
+
+    protected int getTemplateRandomRotation(long posX, long posZ)
+    {
+        if (this.useTemplateRotation == false)
+        {
+            return 0;
+        }
+
+        this.rand.setSeed(this.worldSeed);
+        long l1 = this.rand.nextLong() / 2L * 2L + 1L;
+        long l2 = this.rand.nextLong() / 2L * 2L + 1L;
+        this.rand.setSeed(posX * l1 + posZ * l2 ^ this.worldSeed);
+
+        return this.rand.nextInt(4);
+    }
+
+    protected int getImageX(int areaX, int areaZ)
+    {
+        // normal (0 degrees) template rotation
+        if (this.templateRotation == 0)
+        {
+            return areaX;
+        }
+
+        // 90 degree template rotation clock-wise
+        if (this.templateRotation == 1)
+        {
+            return this.areaSizeZ - areaZ - 1;
+        }
+
+        // 180 degree template rotation clock-wise
+        if (this.templateRotation == 2)
+        {
+            return this.areaSizeX - areaX - 1;
+        }
+
+        // 270 degree template rotation clock-wise
+        return areaZ;
+    }
+
+    protected int getImageY(int areaX, int areaZ)
+    {
+        // normal (0 degrees) template rotation
+        if (this.templateRotation == 0)
+        {
+            return areaZ;
+        }
+
+        // 90 degree template rotation clock-wise
+        if (this.templateRotation == 1)
+        {
+            return this.areaSizeX - areaX - 1;
+        }
+
+        // 180 degree template rotation clock-wise
+        if (this.templateRotation == 2)
+        {
+            return this.areaSizeZ - areaZ - 1;
+        }
+
+        // 270 degree template rotation clock-wise
+        return areaX;
     }
 
     protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
@@ -131,7 +220,7 @@ public class ImageSingle implements IImageReader
         return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
     }
 
-    protected int getBiomeIdFromTemplateImage(int imageX, int imageY, int defaultBiomeID)
+    protected int getImageAlphaAt(int imageX, int imageY)
     {
         int[] alpha = new int[1];
 
@@ -149,18 +238,11 @@ public class ImageSingle implements IImageReader
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
-            PaintedBiomes.logger.fatal("getBiomeIdFromTemplateImage(): Error reading the alpha channel of the template image - minX: " + minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ + " x: " + imageX + " y: " + imageY);
+            PaintedBiomes.logger.fatal("getImageAlphaAt(): Error reading the alpha channel of the template image; minX: " +
+                    minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ + " imageX: " + imageX + " imageY: " + imageY);
         }
 
-        // Completely transparent pixel
-        if (alpha[0] == 0x00)
-        {
-            return this.getUndefinedAreaBiomeID(defaultBiomeID);
-        }
-
-        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageY));
-
-        return biomeID != -1 ? biomeID : this.getUndefinedAreaBiomeID(defaultBiomeID);
+        return alpha[0];
     }
 
     public boolean isLocationCoveredByTemplate(int blockX, int blockZ)
@@ -168,34 +250,36 @@ public class ImageSingle implements IImageReader
         return this.imageData != null && blockX >= this.minX && blockX <= this.maxX && blockZ >= this.minZ && blockZ <= this.maxZ;
     }
 
-    protected boolean isBiomeDefinedByTemplateAt(int imageX, int imageY)
+    protected boolean isBiomeDefinedByTemplateAt(int areaX, int areaZ)
     {
-        int[] alpha = new int[1];
-
-        try
-        {
-            WritableRaster raster = this.imageData.getAlphaRaster();
-            if (raster != null)
-            {
-                raster.getPixel(imageX, imageY, alpha);
-            }
-            else
-            {
-                alpha[0] = 0xFF;
-            }
-        }
-        catch (ArrayIndexOutOfBoundsException e)
-        {
-            PaintedBiomes.logger.fatal("isBiomeDefinedByTemplateAt(): Error reading the alpha channel of the template image - minX: " + minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ + " x: " + imageX + " y: " + imageY);
-        }
+        int imageX = this.getImageX(areaX, areaZ);
+        int imageY = this.getImageY(areaX, areaZ);
+        int alpha = this.getImageAlphaAt(imageX, imageY);
 
         // Completely transparent pixel
-        if (alpha[0] == 0x00)
+        if (alpha == 0x00)
         {
             return this.templateUndefinedAreaBiomeID != -1;
         }
 
         return ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageY)) != -1;
+    }
+
+    protected int getBiomeIdFromTemplateImage(int areaX, int areaZ, int defaultBiomeID)
+    {
+        int imageX = this.getImageX(areaX, areaZ);
+        int imageY = this.getImageY(areaX, areaZ);
+        int alpha = this.getImageAlphaAt(imageX, imageY);
+
+        // Completely transparent pixel
+        if (alpha == 0x00)
+        {
+            return this.getUndefinedAreaBiomeID(defaultBiomeID);
+        }
+
+        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageY));
+
+        return biomeID != -1 ? biomeID : this.getUndefinedAreaBiomeID(defaultBiomeID);
     }
 
     @Override

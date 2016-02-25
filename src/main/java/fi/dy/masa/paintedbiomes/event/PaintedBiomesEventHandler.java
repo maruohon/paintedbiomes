@@ -69,7 +69,7 @@ public class PaintedBiomesEventHandler
         }
 
         PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
-        ImageHandler.getImageHandler(0).init();
+        ImageHandler.getImageHandler(0).init(event.seed);
         event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType);
         event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType);
         event.newBiomeGens[2] = event.newBiomeGens[0];
@@ -78,7 +78,8 @@ public class PaintedBiomesEventHandler
     private static void overrideWorldChunkManager(World world)
     {
         // Not used when using a GenLayer override, and don't accidentally re-wrap our own WorldChunkManager...
-        if (Configs.getEffectiveMainConfig().useGenLayer == true || world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes)
+        if (world.isRemote == true || Configs.getEffectiveMainConfig().useGenLayer == true ||
+            world.provider.worldChunkMgr instanceof WorldChunkManagerPaintedBiomes)
         {
             return;
         }
@@ -106,13 +107,18 @@ public class PaintedBiomesEventHandler
                 world.getWorldChunkManager().getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.getName()));
 
         // Re-initialize the ImageHandler when a world loads, to update config values etc.
-        ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
+        ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init(world.getSeed());
 
         world.provider.worldChunkMgr = new WorldChunkManagerPaintedBiomes(world, world.getWorldChunkManager(), imageHandler);
     }
 
     private static void overrideChunkProvider(World world)
     {
+        if (world.isRemote == true)
+        {
+            return;
+        }
+
         int dimension = world.provider.dimensionId;
 
         for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)

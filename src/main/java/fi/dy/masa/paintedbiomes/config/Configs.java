@@ -4,15 +4,16 @@ import java.io.File;
 
 import net.minecraft.world.biome.BiomeGenBase;
 
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.config.ConfigCategory;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
+
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.common.config.ConfigCategory;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 
 public class Configs
 {
@@ -45,6 +46,7 @@ public class Configs
     private boolean useCustomColorMappings;
 
     public boolean useTemplateRepeating;
+    public boolean useTemplateRandomRotation;
     public int repeatTemplatePositiveX;
     public int repeatTemplatePositiveZ;
     public int repeatTemplateNegativeX;
@@ -181,6 +183,7 @@ public class Configs
         this.unpaintedAreaBiome         = old.unpaintedAreaBiome;
         this.useSingleTemplateImage     = old.useSingleTemplateImage;
         this.useTemplateRepeating       = old.useTemplateRepeating;
+        this.useTemplateRandomRotation  = old.useTemplateRandomRotation;
         this.repeatTemplatePositiveX    = old.repeatTemplatePositiveX;
         this.repeatTemplatePositiveZ    = old.repeatTemplatePositiveZ;
         this.repeatTemplateNegativeX    = old.repeatTemplateNegativeX;
@@ -226,6 +229,10 @@ public class Configs
         prop = conf.get(category, "useSingleTemplateImage", this.useSingleTemplateImage);
         prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
         this.useSingleTemplateImage = prop.getBoolean();
+
+        prop = conf.get(category, "useTemplateRandomRotation", this.useTemplateRandomRotation);
+        prop.comment = "Enable random rotation of the template images. (The rotation is based on the world seed.)";
+        this.useTemplateRandomRotation = prop.getBoolean();
 
         category = "TemplateRepeating";
 
