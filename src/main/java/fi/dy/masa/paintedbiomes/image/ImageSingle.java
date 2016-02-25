@@ -174,7 +174,7 @@ public class ImageSingle implements IImageReader
         // 90 degree template rotation clock-wise
         if (this.templateRotation == 1)
         {
-            return this.areaSizeZ - areaZ - 1;
+            return areaZ;
         }
 
         // 180 degree template rotation clock-wise
@@ -184,7 +184,7 @@ public class ImageSingle implements IImageReader
         }
 
         // 270 degree template rotation clock-wise
-        return areaZ;
+        return this.areaSizeZ - areaZ - 1;
     }
 
     protected int getImageY(int areaX, int areaZ)

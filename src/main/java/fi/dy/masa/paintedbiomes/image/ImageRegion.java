@@ -10,7 +10,6 @@ import javax.imageio.ImageIO;
 
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
-import fi.dy.masa.paintedbiomes.util.RegionCoords;
 
 public class ImageRegion implements IImageReader
 {
@@ -107,7 +106,7 @@ public class ImageRegion implements IImageReader
         // 90 degree template rotation clock-wise
         if (this.templateRotation == 1)
         {
-            return this.areaSizeZ - areaZ - 1;
+            return areaZ;
         }
 
         // 180 degree template rotation clock-wise
@@ -117,7 +116,7 @@ public class ImageRegion implements IImageReader
         }
 
         // 270 degree template rotation clock-wise
-        return areaZ;
+        return this.areaSizeZ - areaZ - 1;
     }
 
     protected int getImageY(int areaX, int areaZ)
@@ -158,14 +157,14 @@ public class ImageRegion implements IImageReader
 
     protected int getAreaX(int blockX)
     {
-        //return blockX & 0x1FF;
-        return (blockX % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        return blockX & 0x1FF;
+        //return (blockX % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
     }
 
     protected int getAreaZ(int blockZ)
     {
-        //return blockZ & 0x1FF;
-        return (blockZ % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
+        return blockZ & 0x1FF;
+        //return (blockZ % RegionCoords.REGION_SIZE + RegionCoords.REGION_SIZE) % RegionCoords.REGION_SIZE;
     }
 
     public boolean isLocationCoveredByTemplate(int blockX, int blockZ)

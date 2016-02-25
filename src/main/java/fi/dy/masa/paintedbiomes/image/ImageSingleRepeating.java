@@ -85,23 +85,7 @@ public class ImageSingleRepeating extends ImageSingle
         }
 
         rand.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
-        int rotation = rand.nextInt(4);
-
-        // Lame attempt to try to prevent the same rotation on adjacent locations
-        /*for (int i = 0; checkAdjacent == true && i < 3; i++)
-        {
-            if (rotation != this.getTemplateRotation(posX - 1, posZ    , false) &&
-                rotation != this.getTemplateRotation(posX + 1, posZ    , false) &&
-                rotation != this.getTemplateRotation(posX    , posZ - 1, false) &&
-                rotation != this.getTemplateRotation(posX    , posZ + 1, false))
-            {
-                break;
-            }
-
-            rotation = (rotation + 1) & 0x3;
-        }*/
-
-        return rotation;
+        return rand.nextInt(4);
     }
 
     protected void setTemplateRotation(long posX, long posZ)
@@ -123,7 +107,7 @@ public class ImageSingleRepeating extends ImageSingle
         if (area == 0)
         {
             // Inside the "normal" or "master" template area; use a rotation based on the template alignment position
-            this.setTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
+            this.setTemplateRotation(0, 0);
 
             return this.isBiomeDefinedByTemplateAt(blockX - this.minX, blockZ - this.minZ);
         }
@@ -139,7 +123,9 @@ public class ImageSingleRepeating extends ImageSingle
             int y = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
 
             // Repeated template, use a random rotation based on the relative position of the repeated template
-            this.setTemplateRotation((blockX - this.minX) / this.areaSizeX, (blockZ - this.minZ) / this.areaSizeZ);
+            int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
+            int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
+            this.setTemplateRotation(tx, tz);
 
             return this.isBiomeDefinedByTemplateAt(x, y);
         }
@@ -171,7 +157,7 @@ public class ImageSingleRepeating extends ImageSingle
             }
 
             // use a rotation based on the template alignment position
-            this.setTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
+            this.setTemplateRotation(0, 0);
 
             return this.isBiomeDefinedByTemplateAt(x, y);
         }
@@ -193,7 +179,7 @@ public class ImageSingleRepeating extends ImageSingle
         if (area == 0)
         {
             // Inside the "normal" or "master" template area; use a rotation based on the template alignment position
-            this.setTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
+            this.setTemplateRotation(0, 0);
 
             return this.getBiomeIdFromTemplateImage(blockX - this.minX, blockZ - this.minZ, defaultBiomeID);
         }
@@ -209,7 +195,9 @@ public class ImageSingleRepeating extends ImageSingle
             int z = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
 
             // Repeated template, use a random rotation based on the relative position of the repeated template
-            this.setTemplateRotation((blockX - this.minX) / this.areaSizeX, (blockZ - this.minZ) / this.areaSizeZ);
+            int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
+            int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
+            this.setTemplateRotation(tx, tz);
 
             return this.getBiomeIdFromTemplateImage(x, z, defaultBiomeID);
         }
@@ -241,7 +229,7 @@ public class ImageSingleRepeating extends ImageSingle
             }
 
             // use a rotation based on the template alignment position
-            this.setTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
+            this.setTemplateRotation(0, 0);
 
             return this.getBiomeIdFromTemplateImage(x, z, defaultBiomeID);
         }
