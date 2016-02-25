@@ -3,7 +3,7 @@ package fi.dy.masa.paintedbiomes.util;
 
 public class RegionCoords
 {
-    public static final int REGION_SIZE = 512;
+    public static final int REGION_SIZE = 64;
     public final int dimension;
     public final int regionX;
     public final int regionZ;
@@ -17,7 +17,8 @@ public class RegionCoords
 
     public static RegionCoords fromBlockCoords(int dimension, int blockX, int blockZ)
     {
-        return new RegionCoords(dimension, blockX >> 9, blockZ >> 9);
+        //return new RegionCoords(dimension, blockX >> 9, blockZ >> 9);
+        return new RegionCoords(dimension, blockX / REGION_SIZE, blockZ / REGION_SIZE);
     }
 
     @Override

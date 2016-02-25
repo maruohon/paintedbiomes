@@ -23,11 +23,6 @@ public class ImageCache
         this.seed = seed;
     }
 
-    public boolean contains(int dimension, int blockX, int blockZ)
-    {
-        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(dimension, blockX, blockZ));
-    }
-
     public IImageReader getRegionImage(int dimension, int blockX, int blockZ)
     {
         RegionCoords regionCoords = RegionCoords.fromBlockCoords(dimension, blockX, blockZ);

@@ -16,7 +16,9 @@ public class ImageSingle implements IImageReader
     protected final int dimension;
     protected final long worldSeed;
     protected final File imageFile;
-    protected final Random rand;
+    protected static final Random rand = new Random();
+    protected final long randLong1;
+    protected final long randLong2;
     protected BufferedImage imageData;
     protected int areaSizeX;
     protected int areaSizeZ;
@@ -40,7 +42,11 @@ public class ImageSingle implements IImageReader
         this.dimension = dimension;
         this.worldSeed = seed;
         this.imageFile = imageFile;
-        this.rand = new Random();
+
+        rand.setSeed(this.worldSeed);
+        this.randLong1 = rand.nextLong() / 2L * 2L + 1L;
+        this.randLong2 = rand.nextLong() / 2L * 2L + 1L;
+
         this.reload();
     }
 
@@ -56,7 +62,7 @@ public class ImageSingle implements IImageReader
         this.templateAlignmentX = conf.templateAlignmentX;
         this.templateAlignmentZ = conf.templateAlignmentZ;
 
-        this.templateRotation = this.getTemplateRandomRotation(this.templateAlignmentX, this.templateAlignmentZ);
+        this.templateRotation = this.getTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
         this.getTemplateDimensions();
         this.setAreaBounds();
     }
@@ -145,19 +151,16 @@ public class ImageSingle implements IImageReader
         }
     }
 
-    protected int getTemplateRandomRotation(long posX, long posZ)
+    protected int getTemplateRotation(long posX, long posZ)
     {
         if (this.useTemplateRotation == false)
         {
             return 0;
         }
 
-        this.rand.setSeed(this.worldSeed);
-        long l1 = this.rand.nextLong() / 2L * 2L + 1L;
-        long l2 = this.rand.nextLong() / 2L * 2L + 1L;
-        this.rand.setSeed(posX * l1 + posZ * l2 ^ this.worldSeed);
+        rand.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
 
-        return this.rand.nextInt(4);
+        return rand.nextInt(4);
     }
 
     protected int getImageX(int areaX, int areaZ)
