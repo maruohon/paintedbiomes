@@ -12,44 +12,46 @@ public class ImageSingleRepeating extends ImageSingle
     public static final int POSX = 0x02;
     public static final int POSZ = 0x08;
 
-    protected int repeatTemplate;
-    protected int repeatEdge;
+    protected final int repeatTemplate;
+    protected final int repeatEdge;
 
     public ImageSingleRepeating(int dimension, long seed, File imageFile)
     {
         super(dimension, seed, imageFile);
+
+        Configs conf = Configs.getConfig(this.dimension);
+
+        int repeatTemplate = 0;
+        if (conf.repeatTemplatePositiveX == 1) repeatTemplate |= POSX;
+        if (conf.repeatTemplatePositiveZ == 1) repeatTemplate |= POSZ;
+        if (conf.repeatTemplateNegativeX == 1) repeatTemplate |= NEGX;
+        if (conf.repeatTemplateNegativeZ == 1) repeatTemplate |= NEGZ;
+
+        int repeatEdge = 0;
+        if (conf.repeatTemplatePositiveX == 2) repeatEdge |= POSX;
+        if (conf.repeatTemplatePositiveZ == 2) repeatEdge |= POSZ;
+        if (conf.repeatTemplateNegativeX == 2) repeatEdge |= NEGX;
+        if (conf.repeatTemplateNegativeZ == 2) repeatEdge |= NEGZ;
+
+        this.repeatTemplate = repeatTemplate;
+        this.repeatEdge = repeatEdge;
     }
 
     @Override
-    protected void reload()
+    protected void setTemplateDimensions()
     {
-        super.reload();
+        super.setTemplateDimensions();
 
-        // non-square template image with random template rotations enabled...
+        // non-square template image while random template rotation is enabled...
         if (this.useTemplateRotation == true && this.areaSizeX != this.areaSizeZ)
         {
-            PaintedBiomes.logger.warn("*** WARNING: Template random rotations enabled, but the template image is not square! Clipping the template to a square!");
+            PaintedBiomes.logger.warn("*** WARNING: Template random rotations enabled, but the template image is not square!" +
+                                      " Clipping the template to a square!");
 
             // Clip the template image to a square
             this.areaSizeX = Math.min(this.areaSizeX, this.areaSizeZ);
             this.areaSizeZ = Math.min(this.areaSizeX, this.areaSizeZ);
-            this.setAreaBounds();
         }
-
-        Configs conf = Configs.getConfig(this.dimension);
-
-        this.repeatTemplate = 0;
-        this.repeatEdge = 0;
-
-        if (conf.repeatTemplatePositiveX == 1) this.repeatTemplate |= POSX;
-        if (conf.repeatTemplatePositiveZ == 1) this.repeatTemplate |= POSZ;
-        if (conf.repeatTemplateNegativeX == 1) this.repeatTemplate |= NEGX;
-        if (conf.repeatTemplateNegativeZ == 1) this.repeatTemplate |= NEGZ;
-
-        if (conf.repeatTemplatePositiveX == 2) this.repeatEdge |= POSX;
-        if (conf.repeatTemplatePositiveZ == 2) this.repeatEdge |= POSZ;
-        if (conf.repeatTemplateNegativeX == 2) this.repeatEdge |= NEGX;
-        if (conf.repeatTemplateNegativeZ == 2) this.repeatEdge |= NEGZ;
     }
 
     protected int getArea(int blockX, int blockZ)
@@ -75,22 +77,6 @@ public class ImageSingleRepeating extends ImageSingle
         }
 
         return area;
-    }
-
-    protected int getTemplateRotation(long posX, long posZ, boolean checkAdjacent)
-    {
-        if (this.useTemplateRotation == false)
-        {
-            return 0;
-        }
-
-        rand.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
-        return rand.nextInt(4);
-    }
-
-    protected void setTemplateRotation(long posX, long posZ)
-    {
-        this.templateRotation = this.getTemplateRotation(posX, posZ, true);
     }
 
     @Override
@@ -119,15 +105,15 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatTemplate != 0 && (this.repeatTemplate & area) == area)
         {
-            int x = ((blockX - this.minX) % this.areaSizeX + this.areaSizeX) % this.areaSizeX;
-            int y = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
+            int areaX = ((blockX - this.minX) % this.areaSizeX + this.areaSizeX) % this.areaSizeX;
+            int areaZ = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
 
             // Repeated template, use a random rotation based on the relative position of the repeated template
             int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
             int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
             this.setTemplateRotation(tx, tz);
 
-            return this.isBiomeDefinedByTemplateAt(x, y);
+            return this.isBiomeDefinedByTemplateAt(areaX, areaZ);
         }
 
         // Template edge repeating enabled, and the given location is covered by the repeat setting.
@@ -135,31 +121,31 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatEdge != 0 && (this.repeatEdge & area) == area)
         {
-            int x = blockX - this.minX;
-            int y = blockZ - this.minZ;
+            int areaX = blockX - this.minX;
+            int areaZ = blockZ - this.minZ;
 
             if (blockX < this.minX)
             {
-                x = 0;
+                areaX = 0;
             }
             else if (blockX > this.maxX)
             {
-                x = this.areaSizeX - 1;
+                areaX = this.areaSizeX - 1;
             }
 
             if (blockZ < this.minZ)
             {
-                y = 0;
+                areaZ = 0;
             }
             else if (blockZ > this.maxZ)
             {
-                y = this.areaSizeZ - 1;
+                areaZ = this.areaSizeZ - 1;
             }
 
             // use a rotation based on the template alignment position
             this.setTemplateRotation(0, 0);
 
-            return this.isBiomeDefinedByTemplateAt(x, y);
+            return this.isBiomeDefinedByTemplateAt(areaX, areaZ);
         }
 
         return this.unpaintedAreaBiomeID != -1;
@@ -191,15 +177,15 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatTemplate != 0 && (this.repeatTemplate & area) == area)
         {
-            int x = ((blockX - this.minX) % this.areaSizeX + this.areaSizeX) % this.areaSizeX;
-            int z = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
+            int areaX = ((blockX - this.minX) % this.areaSizeX + this.areaSizeX) % this.areaSizeX;
+            int areaZ = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
 
             // Repeated template, use a random rotation based on the relative position of the repeated template
             int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
             int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
             this.setTemplateRotation(tx, tz);
 
-            return this.getBiomeIdFromTemplateImage(x, z, defaultBiomeID);
+            return this.getBiomeIdFromTemplateImage(areaX, areaZ, defaultBiomeID);
         }
 
         // Template edge repeating enabled, and the given location is covered by the repeat setting.
@@ -207,31 +193,31 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatEdge != 0 && (this.repeatEdge & area) == area)
         {
-            int x = blockX - this.minX;
-            int z = blockZ - this.minZ;
+            int areaX = blockX - this.minX;
+            int areaZ = blockZ - this.minZ;
 
             if (blockX < this.minX)
             {
-                x = 0;
+                areaX = 0;
             }
             else if (blockX > this.maxX)
             {
-                x = this.areaSizeX - 1;
+                areaX = this.areaSizeX - 1;
             }
 
             if (blockZ < this.minZ)
             {
-                z = 0;
+                areaZ = 0;
             }
             else if (blockZ > this.maxZ)
             {
-                z = this.areaSizeZ - 1;
+                areaZ = this.areaSizeZ - 1;
             }
 
             // use a rotation based on the template alignment position
             this.setTemplateRotation(0, 0);
 
-            return this.getBiomeIdFromTemplateImage(x, z, defaultBiomeID);
+            return this.getBiomeIdFromTemplateImage(areaX, areaZ, defaultBiomeID);
         }
 
         // If there is a biome defined for unpainted areas, then use that, otherwise use the biome from the regular terrain generation

@@ -1,36 +1,20 @@
 package fi.dy.masa.paintedbiomes.image;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
-import java.util.Random;
 
 import javax.imageio.ImageIO;
 
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
-public class ImageSingle implements IImageReader
+public class ImageSingle extends ImageBase implements IImageReader
 {
-    protected final int dimension;
-    protected final long worldSeed;
     protected final File imageFile;
-    protected static final Random rand = new Random();
-    protected final long randLong1;
-    protected final long randLong2;
-    protected BufferedImage imageData;
-    protected int areaSizeX;
-    protected int areaSizeZ;
 
-    protected boolean useTemplateRotation;
-    protected int templateRotation;
-    protected int templateAlignmentMode;
-    protected int templateAlignmentX;
-    protected int templateAlignmentZ;
-
-    protected int unpaintedAreaBiomeID;
-    protected int templateUndefinedAreaBiomeID;
+    protected final int templateAlignmentMode;
+    protected final int templateAlignmentX;
+    protected final int templateAlignmentZ;
 
     protected int minX;
     protected int maxX;
@@ -39,44 +23,33 @@ public class ImageSingle implements IImageReader
 
     public ImageSingle(int dimension, long seed, File imageFile)
     {
-        this.dimension = dimension;
-        this.worldSeed = seed;
+        super(dimension, seed);
+
         this.imageFile = imageFile;
 
-        rand.setSeed(this.worldSeed);
-        this.randLong1 = rand.nextLong() / 2L * 2L + 1L;
-        this.randLong2 = rand.nextLong() / 2L * 2L + 1L;
-
-        this.reload();
-    }
-
-    protected void reload()
-    {
-        this.readImageTemplate(this.imageFile);
-
         Configs conf = Configs.getConfig(this.dimension);
-        this.useTemplateRotation = conf.useTemplateRandomRotation;
-        this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
-        this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
         this.templateAlignmentMode = conf.templateAlignmentMode;
         this.templateAlignmentX = conf.templateAlignmentX;
         this.templateAlignmentZ = conf.templateAlignmentZ;
+        this.setTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
 
-        this.templateRotation = this.getTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
-        this.getTemplateDimensions();
-        this.setAreaBounds();
+        this.readTemplateImage(this.imageFile);
     }
 
-    protected void readImageTemplate(File imageFile)
+    protected void readTemplateImage(File imageFile)
     {
-        this.imageData = null;
-
         try
         {
             if (imageFile.exists() == true)
             {
                 this.imageData = ImageIO.read(imageFile);
-                PaintedBiomes.logger.info("Successfully read single-image-template from '" + imageFile.getAbsolutePath() + "'");
+
+                if (this.imageData != null)
+                {
+                    PaintedBiomes.logger.info("Successfully read single-image-template from '" + imageFile.getAbsolutePath() + "'");
+                    this.setTemplateDimensions();
+                    this.setAreaBounds();
+                }
             }
         }
         catch (IOException e)
@@ -85,29 +58,7 @@ public class ImageSingle implements IImageReader
         }
     }
 
-    protected void getTemplateDimensions()
-    {
-        if (this.imageData == null)
-        {
-            PaintedBiomes.logger.warn("Failed to get area bounds from template image");
-            return;
-        }
-
-        // 0 degree or 180 degree template rotation
-        if ((this.templateRotation & 0x1) == 0)
-        {
-            this.areaSizeX = this.imageData.getWidth();
-            this.areaSizeZ = this.imageData.getHeight();
-        }
-        // 90 or 270 degree template rotation
-        else
-        {
-            this.areaSizeX = this.imageData.getHeight();
-            this.areaSizeZ = this.imageData.getWidth();
-        }
-    }
-
-    protected void setAreaBounds()
+    private void setAreaBounds()
     {
         // Centered
         if (this.templateAlignmentMode == 0)
@@ -151,159 +102,21 @@ public class ImageSingle implements IImageReader
         }
     }
 
-    protected int getTemplateRotation(long posX, long posZ)
+    @Override
+    protected int getAreaX(int blockX)
     {
-        if (this.useTemplateRotation == false)
-        {
-            return 0;
-        }
-
-        rand.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
-
-        return rand.nextInt(4);
+        return blockX - this.minX;
     }
 
-    protected int getImageX(int areaX, int areaZ)
+    @Override
+    protected int getAreaZ(int blockZ)
     {
-        // normal (0 degrees) template rotation
-        if (this.templateRotation == 0)
-        {
-            return areaX;
-        }
-
-        // 90 degree template rotation clock-wise
-        if (this.templateRotation == 1)
-        {
-            return areaZ;
-        }
-
-        // 180 degree template rotation clock-wise
-        if (this.templateRotation == 2)
-        {
-            return this.areaSizeX - areaX - 1;
-        }
-
-        // 270 degree template rotation clock-wise
-        return this.areaSizeZ - areaZ - 1;
+        return blockZ - this.minZ;
     }
 
-    protected int getImageY(int areaX, int areaZ)
-    {
-        // normal (0 degrees) template rotation
-        if (this.templateRotation == 0)
-        {
-            return areaZ;
-        }
-
-        // 90 degree template rotation clock-wise
-        if (this.templateRotation == 1)
-        {
-            return this.areaSizeX - areaX - 1;
-        }
-
-        // 180 degree template rotation clock-wise
-        if (this.templateRotation == 2)
-        {
-            return this.areaSizeZ - areaZ - 1;
-        }
-
-        // 270 degree template rotation clock-wise
-        return areaX;
-    }
-
-    protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
-    {
-        // If there is a biome defined for unpainted areas, then use that, otherwise use the biome from the regular terrain generation
-        return this.unpaintedAreaBiomeID != -1 ? this.unpaintedAreaBiomeID : defaultBiomeID;
-    }
-
-    protected int getUndefinedAreaBiomeID(int defaultBiomeID)
-    {
-        // Return the Biome ID for the undefined areas, if one has been set, otherwise return the one from the regular terrain generation
-        return this.templateUndefinedAreaBiomeID != -1 ? this.templateUndefinedAreaBiomeID : defaultBiomeID;
-    }
-
-    protected int getImageAlphaAt(int imageX, int imageY)
-    {
-        int[] alpha = new int[1];
-
-        try
-        {
-            WritableRaster raster = this.imageData.getAlphaRaster();
-            if (raster != null)
-            {
-                raster.getPixel(imageX, imageY, alpha);
-            }
-            else
-            {
-                alpha[0] = 0xFF;
-            }
-        }
-        catch (ArrayIndexOutOfBoundsException e)
-        {
-            PaintedBiomes.logger.fatal("getImageAlphaAt(): Error reading the alpha channel of the template image; minX: " +
-                    minX + " maxX: " + maxX + " minZ: " + minZ + " maxZ: " + maxZ + " imageX: " + imageX + " imageY: " + imageY);
-        }
-
-        return alpha[0];
-    }
-
-    public boolean isLocationCoveredByTemplate(int blockX, int blockZ)
+    @Override
+    protected boolean isLocationCoveredByTemplate(int blockX, int blockZ)
     {
         return this.imageData != null && blockX >= this.minX && blockX <= this.maxX && blockZ >= this.minZ && blockZ <= this.maxZ;
-    }
-
-    protected boolean isBiomeDefinedByTemplateAt(int areaX, int areaZ)
-    {
-        int imageX = this.getImageX(areaX, areaZ);
-        int imageY = this.getImageY(areaX, areaZ);
-        int alpha = this.getImageAlphaAt(imageX, imageY);
-
-        // Completely transparent pixel
-        if (alpha == 0x00)
-        {
-            return this.templateUndefinedAreaBiomeID != -1;
-        }
-
-        return ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageY)) != -1;
-    }
-
-    protected int getBiomeIdFromTemplateImage(int areaX, int areaZ, int defaultBiomeID)
-    {
-        int imageX = this.getImageX(areaX, areaZ);
-        int imageY = this.getImageY(areaX, areaZ);
-        int alpha = this.getImageAlphaAt(imageX, imageY);
-
-        // Completely transparent pixel
-        if (alpha == 0x00)
-        {
-            return this.getUndefinedAreaBiomeID(defaultBiomeID);
-        }
-
-        int biomeID = ColorToBiomeMapping.getInstance().getBiomeIDForColor(this.imageData.getRGB(imageX, imageY));
-
-        return biomeID != -1 ? biomeID : this.getUndefinedAreaBiomeID(defaultBiomeID);
-    }
-
-    @Override
-    public boolean isBiomeDefinedAt(int blockX, int blockZ)
-    {
-        if (this.isLocationCoveredByTemplate(blockX, blockZ) == false)
-        {
-            return this.unpaintedAreaBiomeID != -1;
-        }
-
-        return this.isBiomeDefinedByTemplateAt(blockX - this.minX, blockZ - this.minZ);
-    }
-
-    @Override
-    public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
-    {
-        if (this.isLocationCoveredByTemplate(blockX, blockZ) == false)
-        {
-            return this.getUnpaintedAreaBiomeID(defaultBiomeID);
-        }
-
-        return this.getBiomeIdFromTemplateImage(blockX - this.minX, blockZ - this.minZ, defaultBiomeID);
     }
 }
