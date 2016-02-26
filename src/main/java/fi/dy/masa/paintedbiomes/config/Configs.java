@@ -47,6 +47,7 @@ public class Configs
 
     public boolean useTemplateRepeating;
     public boolean useTemplateRandomRotation;
+    public boolean useTemplateRandomFlipping;
     public int repeatTemplatePositiveX;
     public int repeatTemplatePositiveZ;
     public int repeatTemplateNegativeX;
@@ -230,8 +231,12 @@ public class Configs
         prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
         this.useSingleTemplateImage = prop.getBoolean();
 
+        prop = conf.get(category, "useTemplateRandomFlipping", this.useTemplateRandomFlipping);
+        prop.comment = "Enable random flipping/mirroring of the template images (based on the world seed and the relative location).";
+        this.useTemplateRandomFlipping = prop.getBoolean();
+
         prop = conf.get(category, "useTemplateRandomRotation", this.useTemplateRandomRotation);
-        prop.comment = "Enable random rotation of the template images. (The rotation is based on the world seed.)";
+        prop.comment = "Enable random rotation of the template images (based on the world seed and the relative location).";
         this.useTemplateRandomRotation = prop.getBoolean();
 
         category = "TemplateRepeating";

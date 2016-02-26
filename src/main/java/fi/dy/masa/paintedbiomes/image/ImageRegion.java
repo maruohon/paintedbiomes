@@ -39,7 +39,7 @@ public class ImageRegion extends ImageBase implements IImageReader
                     PaintedBiomes.logger.info("Successfully read image template for region '" +
                             this.name + "' from '" + imageFile.getAbsolutePath() + "'");
                     this.setTemplateDimensions();
-                    this.setTemplateRotation(this.regionX, this.regionZ);
+                    this.setTemplateTransformations(this.regionX, this.regionZ);
                 }
             }
         }

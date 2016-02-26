@@ -18,13 +18,17 @@ public abstract class ImageBase implements IImageReader
     protected final long worldSeed;
 
     protected final boolean useTemplateRotation;
+    protected final boolean useTemplateFlipping;
     protected final int unpaintedAreaBiomeID;
     protected final int templateUndefinedAreaBiomeID;
 
+    protected int imageWidth;
+    protected int imageHeight;
     protected int areaSizeX;
     protected int areaSizeZ;
 
     protected int templateRotation;
+    protected int templateFlip;
 
     public ImageBase(int dimension, long seed)
     {
@@ -33,6 +37,7 @@ public abstract class ImageBase implements IImageReader
 
         Configs conf = Configs.getConfig(this.dimension);
         this.useTemplateRotation = conf.useTemplateRandomRotation;
+        this.useTemplateFlipping = conf.useTemplateRandomFlipping;
         this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
 
@@ -49,35 +54,32 @@ public abstract class ImageBase implements IImageReader
             return;
         }
 
+        this.imageWidth = this.imageData.getWidth();
+        this.imageHeight = this.imageData.getHeight();
+
         // 0 degree or 180 degree template rotation
         if ((this.templateRotation & 0x1) == 0)
         {
-            this.areaSizeX = this.imageData.getWidth();
-            this.areaSizeZ = this.imageData.getHeight();
+            this.areaSizeX = this.imageWidth;
+            this.areaSizeZ = this.imageHeight;
         }
         // 90 or 270 degree template rotation
         else
         {
-            this.areaSizeX = this.imageData.getHeight();
-            this.areaSizeZ = this.imageData.getWidth();
+            this.areaSizeX = this.imageHeight;
+            this.areaSizeZ = this.imageWidth;
         }
     }
 
-    protected int getTemplateRotation(long posX, long posZ)
+    protected void setTemplateTransformations(long posX, long posZ)
     {
-        if (this.useTemplateRotation == false)
-        {
-            return 0;
-        }
-
         rand.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
 
-        return rand.nextInt(4);
-    }
+        int r = rand.nextInt(4);
+        this.templateRotation = this.useTemplateRotation == true ? r : 0;
 
-    protected void setTemplateRotation(long posX, long posZ)
-    {
-        this.templateRotation = this.getTemplateRotation(posX, posZ);
+        r = rand.nextInt(4); // 0x1 = flip image X, 0x2 = flip image Y => 0..3
+        this.templateFlip = this.useTemplateFlipping ? r : 0;
     }
 
     protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
@@ -94,50 +96,62 @@ public abstract class ImageBase implements IImageReader
 
     protected int getImageX(int areaX, int areaZ)
     {
-        // normal (0 degrees) template rotation
-        if (this.templateRotation == 0)
+        int imageX = 0;
+
+        switch (this.templateRotation)
         {
-            return areaX;
+            case 0: // normal (0 degrees) template rotation
+                imageX = areaX;
+                break;
+            case 1: // 90 degree template rotation clock-wise
+                imageX = areaZ;
+                break;
+            case 2: // 180 degree template rotation clock-wise
+                imageX = this.areaSizeX - areaX - 1;
+                break;
+            case 3: // 270 degree template rotation clock-wise
+                imageX = this.areaSizeZ - areaZ - 1;
+                break;
+            default:
         }
 
-        // 90 degree template rotation clock-wise
-        if (this.templateRotation == 1)
+        // Flip the template on the X-axis
+        if ((this.templateFlip & 0x1) != 0)
         {
-            return areaZ;
+            imageX = this.imageWidth - imageX - 1;
         }
 
-        // 180 degree template rotation clock-wise
-        if (this.templateRotation == 2)
-        {
-            return this.areaSizeX - areaX - 1;
-        }
-
-        // 270 degree template rotation clock-wise
-        return this.areaSizeZ - areaZ - 1;
+        return imageX;
     }
 
     protected int getImageY(int areaX, int areaZ)
     {
-        // normal (0 degrees) template rotation
-        if (this.templateRotation == 0)
+        int imageY = 0;
+
+        switch (this.templateRotation)
         {
-            return areaZ;
+            case 0: // normal (0 degrees) template rotation
+                imageY = areaZ;
+                break;
+            case 1: // 90 degree template rotation clock-wise
+                imageY = this.areaSizeX - areaX - 1;
+                break;
+            case 2: // 180 degree template rotation clock-wise
+                imageY = this.areaSizeZ - areaZ - 1;
+                break;
+            case 3: // 270 degree template rotation clock-wise
+                imageY = areaX;
+                break;
+            default:
         }
 
-        // 90 degree template rotation clock-wise
-        if (this.templateRotation == 1)
+        // Flip the template on the Y-axis
+        if ((this.templateFlip & 0x2) != 0)
         {
-            return this.areaSizeX - areaX - 1;
+            imageY = this.imageHeight - imageY - 1;
         }
 
-        // 180 degree template rotation clock-wise
-        if (this.templateRotation == 2)
-        {
-            return this.areaSizeZ - areaZ - 1;
-        }
-
-        // 270 degree template rotation clock-wise
-        return areaX;
+        return imageY;
     }
 
     protected int getImageAlphaAt(int imageX, int imageY)

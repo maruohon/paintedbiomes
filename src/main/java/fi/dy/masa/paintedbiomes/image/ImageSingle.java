@@ -31,7 +31,7 @@ public class ImageSingle extends ImageBase implements IImageReader
         this.templateAlignmentMode = conf.templateAlignmentMode;
         this.templateAlignmentX = conf.templateAlignmentX;
         this.templateAlignmentZ = conf.templateAlignmentZ;
-        this.setTemplateRotation(this.templateAlignmentX, this.templateAlignmentZ);
+        this.setTemplateTransformations(this.templateAlignmentX, this.templateAlignmentZ);
 
         this.readTemplateImage(this.imageFile);
     }

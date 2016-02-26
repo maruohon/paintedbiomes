@@ -93,7 +93,7 @@ public class ImageSingleRepeating extends ImageSingle
         if (area == 0)
         {
             // Inside the "normal" or "master" template area; use a rotation based on the template alignment position
-            this.setTemplateRotation(0, 0);
+            this.setTemplateTransformations(0, 0);
 
             return this.isBiomeDefinedByTemplateAt(blockX - this.minX, blockZ - this.minZ);
         }
@@ -111,7 +111,7 @@ public class ImageSingleRepeating extends ImageSingle
             // Repeated template, use a random rotation based on the relative position of the repeated template
             int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
             int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
-            this.setTemplateRotation(tx, tz);
+            this.setTemplateTransformations(tx, tz);
 
             return this.isBiomeDefinedByTemplateAt(areaX, areaZ);
         }
@@ -143,7 +143,7 @@ public class ImageSingleRepeating extends ImageSingle
             }
 
             // use a rotation based on the template alignment position
-            this.setTemplateRotation(0, 0);
+            this.setTemplateTransformations(0, 0);
 
             return this.isBiomeDefinedByTemplateAt(areaX, areaZ);
         }
@@ -165,7 +165,7 @@ public class ImageSingleRepeating extends ImageSingle
         if (area == 0)
         {
             // Inside the "normal" or "master" template area; use a rotation based on the template alignment position
-            this.setTemplateRotation(0, 0);
+            this.setTemplateTransformations(0, 0);
 
             return this.getBiomeIdFromTemplateImage(blockX - this.minX, blockZ - this.minZ, defaultBiomeID);
         }
@@ -183,7 +183,7 @@ public class ImageSingleRepeating extends ImageSingle
             // Repeated template, use a random rotation based on the relative position of the repeated template
             int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
             int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
-            this.setTemplateRotation(tx, tz);
+            this.setTemplateTransformations(tx, tz);
 
             return this.getBiomeIdFromTemplateImage(areaX, areaZ, defaultBiomeID);
         }
@@ -215,7 +215,7 @@ public class ImageSingleRepeating extends ImageSingle
             }
 
             // use a rotation based on the template alignment position
-            this.setTemplateRotation(0, 0);
+            this.setTemplateTransformations(0, 0);
 
             return this.getBiomeIdFromTemplateImage(areaX, areaZ, defaultBiomeID);
         }
