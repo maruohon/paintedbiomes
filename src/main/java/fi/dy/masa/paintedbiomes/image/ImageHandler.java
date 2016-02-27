@@ -8,14 +8,14 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class ImageHandler implements IImageReader
 {
-    private static TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
+    private static final TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
     private ImageCache regionImageCache;
-    private IImageReader singleImage;
+    private ImageSingle singleImage;
 
     private static File templateBasePathGlobal;
     private static File templateBasePathWorld;
     private File templatePath;
-    private int dimension;
+    private final int dimension;
 
     private boolean useSingleTemplateImage;
     private static int timer;
@@ -65,27 +65,31 @@ public class ImageHandler implements IImageReader
         }
     }
 
-    public ImageHandler init()
+    public ImageHandler init(long seed)
     {
-        this.useSingleTemplateImage = Configs.getConfig(this.dimension).useSingleTemplateImage;
+        Configs configs = Configs.getConfig(this.dimension);
+        this.useSingleTemplateImage = configs.useSingleTemplateImage;
+
         this.createAndSetTemplateDir();
 
         // Per-region template images mode
         if (this.useSingleTemplateImage == false)
         {
             this.singleImage = null;
-            this.regionImageCache = new ImageCache(this.templatePath);
+            this.regionImageCache = new ImageCache(seed, this.templatePath);
         }
         // Single template image mode, with some type of template repeating
-        else if (Configs.getConfig(this.dimension).useTemplateRepeating == true)
+        else if (configs.useTemplateRepeating == true)
         {
-            this.singleImage = new ImageSingleRepeating(this.dimension, new File(this.templatePath, "biomes.png"));
+            this.singleImage = new ImageSingleRepeating(this.dimension, seed, this.templatePath);
+            this.singleImage.init();
             this.regionImageCache = null;
         }
         // Single template image mode, no repeating
         else
         {
-            this.singleImage = new ImageSingle(this.dimension, new File(this.templatePath, "biomes.png"));
+            this.singleImage = new ImageSingle(this.dimension, seed, this.templatePath);
+            this.singleImage.init();
             this.regionImageCache = null;
         }
 

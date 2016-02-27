@@ -10,20 +10,17 @@ import fi.dy.masa.paintedbiomes.util.RegionCoords;
 
 public class ImageCache
 {
-    protected Map<RegionCoords, IImageReader> imageRegions;
-    protected Map<RegionCoords, Long> timeouts;
-    protected File path;
+    protected final Map<RegionCoords, IImageReader> imageRegions;
+    protected final Map<RegionCoords, Long> timeouts;
+    protected final File templatePath;
+    protected final long seed;
 
-    public ImageCache(File path)
+    public ImageCache(long seed, File templatePath)
     {
         this.imageRegions = new HashMap<RegionCoords, IImageReader>();
         this.timeouts = new HashMap<RegionCoords, Long>();
-        this.path = path;
-    }
-
-    public boolean contains(int dimension, int blockX, int blockZ)
-    {
-        return this.imageRegions.containsKey(RegionCoords.fromBlockCoords(dimension, blockX, blockZ));
+        this.templatePath = templatePath;
+        this.seed = seed;
     }
 
     public IImageReader getRegionImage(int dimension, int blockX, int blockZ)
@@ -33,7 +30,7 @@ public class ImageCache
 
         if (imageRegion == null)
         {
-            imageRegion = new ImageRegion(regionCoords.dimension, regionCoords.regionX, regionCoords.regionZ, this.path);
+            imageRegion = new ImageRegion(regionCoords.dimension, regionCoords.regionX, regionCoords.regionZ, this.seed, this.templatePath);
             this.imageRegions.put(regionCoords, imageRegion);
         }
 

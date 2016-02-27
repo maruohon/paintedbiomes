@@ -18,6 +18,8 @@ public class RegionCoords
     public static RegionCoords fromBlockCoords(int dimension, int blockX, int blockZ)
     {
         return new RegionCoords(dimension, blockX >> 9, blockZ >> 9);
+        // Note: this actually wouldn't work, they coordinates need to be floored too:
+        //return new RegionCoords(dimension, blockX / REGION_SIZE, blockZ / REGION_SIZE);
     }
 
     @Override

@@ -26,7 +26,6 @@ import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 import fi.dy.masa.paintedbiomes.world.WorldChunkManagerPaintedBiomes;
 
-
 public class PaintedBiomesEventHandler
 {
     @SubscribeEvent
@@ -73,7 +72,7 @@ public class PaintedBiomesEventHandler
         }
 
         PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
-        ImageHandler.getImageHandler(0).init();
+        ImageHandler.getImageHandler(0).init(event.seed);
         event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType, "");
         event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType, "");
         event.newBiomeGens[2] = event.newBiomeGens[0];
@@ -82,7 +81,7 @@ public class PaintedBiomesEventHandler
     private static void overrideWorldChunkManager(World world)
     {
         // Not used when using a GenLayer override, and don't accidentally re-wrap our own WorldChunkManager...
-        if (Configs.getEffectiveMainConfig().useGenLayer == true)
+        if (world.isRemote == true || Configs.getEffectiveMainConfig().useGenLayer == true)
         {
             return;
         }
@@ -112,7 +111,7 @@ public class PaintedBiomesEventHandler
         try
         {
             // Re-initialize the ImageHandler when a world loads, to update config values etc.
-            ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init();
+            ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init(world.getSeed());
 
             WorldChunkManager newWCM = new WorldChunkManagerPaintedBiomes(world, world.getWorldChunkManager(), imageHandler);
             ReflectionHelper.setPrivateValue(WorldProvider.class, world.provider, newWCM, "field_76578_c", "c", "worldChunkMgr");
@@ -125,6 +124,11 @@ public class PaintedBiomesEventHandler
 
     private static void overrideChunkProvider(World world)
     {
+        if (world.isRemote == true)
+        {
+            return;
+        }
+
         int dimension = world.provider.getDimensionId();
 
         for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)

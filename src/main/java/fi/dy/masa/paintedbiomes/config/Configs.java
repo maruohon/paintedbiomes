@@ -4,15 +4,16 @@ import java.io.File;
 
 import net.minecraft.world.biome.BiomeGenBase;
 
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.config.ConfigCategory;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
+
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.common.config.ConfigCategory;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 
 public class Configs
 {
@@ -43,6 +44,11 @@ public class Configs
     public int unpaintedAreaBiome;
     public boolean useSingleTemplateImage;
     private boolean useCustomColorMappings;
+
+    public boolean useTemplateRandomRotation;
+    public boolean useTemplateRandomFlipping;
+    public boolean useAlternateTemplates;
+    public int maxAlternateTemplates;
 
     public boolean useTemplateRepeating;
     public int repeatTemplatePositiveX;
@@ -181,6 +187,7 @@ public class Configs
         this.unpaintedAreaBiome         = old.unpaintedAreaBiome;
         this.useSingleTemplateImage     = old.useSingleTemplateImage;
         this.useTemplateRepeating       = old.useTemplateRepeating;
+        this.useTemplateRandomRotation  = old.useTemplateRandomRotation;
         this.repeatTemplatePositiveX    = old.repeatTemplatePositiveX;
         this.repeatTemplatePositiveZ    = old.repeatTemplatePositiveZ;
         this.repeatTemplateNegativeX    = old.repeatTemplateNegativeX;
@@ -203,6 +210,10 @@ public class Configs
 
         String category = "TemplateImage";
 
+        prop = conf.get(category, "maxAlternateTemplates", this.maxAlternateTemplates);
+        prop.comment = "The maximum number of alternate templates to use. NOTE: Especially with large images, the memory requirements can increase significantly!!";
+        this.maxAlternateTemplates = this.checkAndFixConfigValueInt("maxAlternateTemplates", prop, 0, 10, 0);
+
         prop = conf.get(category, "templateAlignmentMode", this.templateAlignmentMode);
         prop.comment = "When using a single template image, how the template image is aligned in the world. The alignment point is defined by templateAlignmentX and templateAlignmentZ. 0 = centered, 1 = top left, 2 = top right, 3 = bottom right, 4 = bottom left.";
         this.templateAlignmentMode = this.checkAndFixConfigValueInt("templateAlignmentMode", prop, 0, 4, 0);
@@ -223,9 +234,21 @@ public class Configs
         prop.comment = "Biome handling outside of the template image(s). -1 = Use the biome from regular terrain generation, 0..255 = the Biome ID to use.";
         this.unpaintedAreaBiome = this.checkAndFixBiomeID("unpaintedAreaBiomeID", prop, -1);
 
+        prop = conf.get(category, "useAlternateTemplates", this.useAlternateTemplates);
+        prop.comment = "Enable using randomly selected alternate templates (based on the world seed and the relative location).";
+        this.useAlternateTemplates = prop.getBoolean();
+
         prop = conf.get(category, "useSingleTemplateImage", this.useSingleTemplateImage);
         prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
         this.useSingleTemplateImage = prop.getBoolean();
+
+        prop = conf.get(category, "useTemplateRandomFlipping", this.useTemplateRandomFlipping);
+        prop.comment = "Enable random flipping/mirroring of the template images (based on the world seed and the relative location).";
+        this.useTemplateRandomFlipping = prop.getBoolean();
+
+        prop = conf.get(category, "useTemplateRandomRotation", this.useTemplateRandomRotation);
+        prop.comment = "Enable random rotation of the template images (based on the world seed and the relative location).";
+        this.useTemplateRandomRotation = prop.getBoolean();
 
         category = "TemplateRepeating";
 
