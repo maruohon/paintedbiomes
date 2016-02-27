@@ -5,7 +5,7 @@
   "description": "Generates the world's biomes based on image template(s)",
   "version": "${mod_version}",
   "mcversion": "${minecraft_version}",
-  "url": "",
+  "url": "http://minecraft.curseforge.com/projects/painted-biomes",
   "updateUrl": "",
   "authorList": ["masa"],
   "credits": "",
