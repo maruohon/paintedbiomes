@@ -82,7 +82,7 @@ public abstract class ImageBase implements IImageReader
     {
         if (this.imageData == null)
         {
-            PaintedBiomes.logger.warn("null template image while trying to get template dimensions");
+            //PaintedBiomes.logger.warn("null template image while trying to get template dimensions");
             return;
         }
 
