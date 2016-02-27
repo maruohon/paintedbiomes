@@ -1,5 +1,6 @@
 package fi.dy.masa.paintedbiomes.image;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
@@ -15,9 +16,11 @@ public class ImageSingleRepeating extends ImageSingle
     protected final int repeatTemplate;
     protected final int repeatEdge;
 
-    public ImageSingleRepeating(int dimension, long seed, File imageFile)
+    protected BufferedImage[] templates;
+
+    public ImageSingleRepeating(int dimension, long seed, File templatePath)
     {
-        super(dimension, seed, imageFile);
+        super(dimension, seed, templatePath);
 
         Configs conf = Configs.getConfig(this.dimension);
 
@@ -35,12 +38,68 @@ public class ImageSingleRepeating extends ImageSingle
 
         this.repeatTemplate = repeatTemplate;
         this.repeatEdge = repeatEdge;
+
+        // The "main" template is at index 0, the alternates start from 1
+        this.templates = new BufferedImage[this.maxAlternateTemplates + 1];
+    }
+
+    @Override
+    protected void readTemplateImage(File templatePath)
+    {
+        // The "main" template is at index 0, the alternates start from 1
+        this.templates[0] = this.readImageData(new File(templatePath, "biomes.png"));
+        this.imageData = this.templates[0];
+
+        if (this.useAlternateTemplates == true)
+        {
+            for (int i = 1; i < this.templates.length; i++)
+            {
+                BufferedImage image = this.readImageData(new File(templatePath, "biomes_alt_" + i + ".png"));
+                this.templates[i] = image != null ? image : this.templates[0];
+            }
+        }
+
+        this.setTemplateDimensions();
+        this.setAreaBounds();
     }
 
     @Override
     protected void setTemplateDimensions()
     {
-        super.setTemplateDimensions();
+        if (this.imageData == null)
+        {
+            PaintedBiomes.logger.warn("null template image while trying to get template dimensions");
+            return;
+        }
+
+        int width = this.imageData.getWidth();
+        int height = this.imageData.getHeight();
+
+        // Use the dimensions of the smallest template image (although all of them SHOULD be the same size...)
+        for (int i = 1; i < this.templates.length; i++)
+        {
+            if (this.templates[i] != null)
+            {
+                width = Math.min(width, this.templates[i].getWidth());
+                height = Math.min(height, this.templates[i].getHeight());
+            }
+        }
+
+        this.imageWidth = width;
+        this.imageHeight = height;
+
+        // 0 degree or 180 degree template rotation
+        if ((this.templateRotation & 0x1) == 0)
+        {
+            this.areaSizeX = this.imageWidth;
+            this.areaSizeZ = this.imageHeight;
+        }
+        // 90 or 270 degree template rotation
+        else
+        {
+            this.areaSizeX = this.imageHeight;
+            this.areaSizeZ = this.imageWidth;
+        }
 
         // non-square template image while random template rotation is enabled...
         if (this.useTemplateRotation == true && this.areaSizeX != this.areaSizeZ)
@@ -52,6 +111,15 @@ public class ImageSingleRepeating extends ImageSingle
             this.areaSizeX = Math.min(this.areaSizeX, this.areaSizeZ);
             this.areaSizeZ = Math.min(this.areaSizeX, this.areaSizeZ);
         }
+    }
+
+    @Override
+    protected void setTemplateTransformations(long posX, long posZ)
+    {
+        super.setTemplateTransformations(posX, posZ);
+
+        // Update the reference to the template image to be used for the current location
+        this.imageData = this.templates[this.alternateTemplate];
     }
 
     protected int getArea(int blockX, int blockZ)

@@ -45,9 +45,12 @@ public class Configs
     public boolean useSingleTemplateImage;
     private boolean useCustomColorMappings;
 
-    public boolean useTemplateRepeating;
     public boolean useTemplateRandomRotation;
     public boolean useTemplateRandomFlipping;
+    public boolean useAlternateTemplates;
+    public int maxAlternateTemplates;
+
+    public boolean useTemplateRepeating;
     public int repeatTemplatePositiveX;
     public int repeatTemplatePositiveZ;
     public int repeatTemplateNegativeX;
@@ -207,6 +210,10 @@ public class Configs
 
         String category = "TemplateImage";
 
+        prop = conf.get(category, "maxAlternateTemplates", this.maxAlternateTemplates);
+        prop.comment = "The maximum number of alternate templates to use. NOTE: Especially with large images, the memory requirements can increase significantly!!";
+        this.maxAlternateTemplates = this.checkAndFixConfigValueInt("maxAlternateTemplates", prop, 0, 10, 0);
+
         prop = conf.get(category, "templateAlignmentMode", this.templateAlignmentMode);
         prop.comment = "When using a single template image, how the template image is aligned in the world. The alignment point is defined by templateAlignmentX and templateAlignmentZ. 0 = centered, 1 = top left, 2 = top right, 3 = bottom right, 4 = bottom left.";
         this.templateAlignmentMode = this.checkAndFixConfigValueInt("templateAlignmentMode", prop, 0, 4, 0);
@@ -226,6 +233,10 @@ public class Configs
         prop = conf.get(category, "unpaintedAreaBiomeID", this.unpaintedAreaBiome);
         prop.comment = "Biome handling outside of the template image(s). -1 = Use the biome from regular terrain generation, 0..255 = the Biome ID to use.";
         this.unpaintedAreaBiome = this.checkAndFixBiomeID("unpaintedAreaBiomeID", prop, -1);
+
+        prop = conf.get(category, "useAlternateTemplates", this.useAlternateTemplates);
+        prop.comment = "Enable using randomly selected alternate templates (based on the world seed and the relative location).";
+        this.useAlternateTemplates = prop.getBoolean();
 
         prop = conf.get(category, "useSingleTemplateImage", this.useSingleTemplateImage);
         prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";

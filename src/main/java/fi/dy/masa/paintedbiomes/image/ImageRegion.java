@@ -1,10 +1,7 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Random;
-
-import javax.imageio.ImageIO;
 
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 
@@ -15,7 +12,7 @@ public class ImageRegion extends ImageBase implements IImageReader
     protected final int regionX;
     protected final int regionZ;
 
-    public ImageRegion(int dimension, int regionX, int regionZ, long seed, File path)
+    public ImageRegion(int dimension, int regionX, int regionZ, long seed, File templatePath)
     {
         super(dimension, seed);
 
@@ -23,30 +20,25 @@ public class ImageRegion extends ImageBase implements IImageReader
         this.regionZ = regionZ;
         this.name = "r." + regionX + "." + regionZ;
 
-        this.readImageTemplate(new File(path, this.name + ".png"));
+        this.setTemplateTransformations(this.regionX, this.regionZ);
+        this.readTemplateImage(templatePath);
     }
 
-    protected void readImageTemplate(File imageFile)
+    protected void readTemplateImage(File templatePath)
     {
-        try
-        {
-            if (imageFile.exists() == true)
-            {
-                this.imageData = ImageIO.read(imageFile);
+        File templateFile = new File(templatePath, this.name + ".png");
 
-                if (this.imageData != null)
-                {
-                    PaintedBiomes.logger.info("Successfully read image template for region '" +
-                            this.name + "' from '" + imageFile.getAbsolutePath() + "'");
-                    this.setTemplateDimensions();
-                    this.setTemplateTransformations(this.regionX, this.regionZ);
-                }
+        if (this.useAlternateTemplates == true)
+        {
+            File tmpFile = new File(templatePath, this.name + "_alt_" + (this.alternateTemplate + 1) + ".png");
+            if (tmpFile.exists() == true)
+            {
+                templateFile = tmpFile;
             }
         }
-        catch (IOException e)
-        {
-            //PaintedBiomes.logger.warn("Failed to read image template for region '" + this.name + "' from '" + imageFile.getAbsolutePath() + "'");
-        }
+
+        this.imageData = this.readImageData(templateFile);
+        this.setTemplateDimensions();
     }
 
     @Override

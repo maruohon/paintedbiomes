@@ -1,17 +1,12 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
-
-import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle extends ImageBase implements IImageReader
 {
-    protected final File imageFile;
-
+    protected final File templatePath;
     protected final int templateAlignmentMode;
     protected final int templateAlignmentX;
     protected final int templateAlignmentZ;
@@ -21,44 +16,42 @@ public class ImageSingle extends ImageBase implements IImageReader
     protected int minZ;
     protected int maxZ;
 
-    public ImageSingle(int dimension, long seed, File imageFile)
+    public ImageSingle(int dimension, long seed, File templatePath)
     {
         super(dimension, seed);
-
-        this.imageFile = imageFile;
 
         Configs conf = Configs.getConfig(this.dimension);
         this.templateAlignmentMode = conf.templateAlignmentMode;
         this.templateAlignmentX = conf.templateAlignmentX;
         this.templateAlignmentZ = conf.templateAlignmentZ;
-        this.setTemplateTransformations(this.templateAlignmentX, this.templateAlignmentZ);
-
-        this.readTemplateImage(this.imageFile);
+        this.templatePath = templatePath;
     }
 
-    protected void readTemplateImage(File imageFile)
+    public void init()
     {
-        try
-        {
-            if (imageFile.exists() == true)
-            {
-                this.imageData = ImageIO.read(imageFile);
+        this.setTemplateTransformations(this.templateAlignmentX, this.templateAlignmentZ);
+        this.readTemplateImage(this.templatePath);
+    }
 
-                if (this.imageData != null)
-                {
-                    PaintedBiomes.logger.info("Successfully read single-image-template from '" + imageFile.getAbsolutePath() + "'");
-                    this.setTemplateDimensions();
-                    this.setAreaBounds();
-                }
+    protected void readTemplateImage(File templatePath)
+    {
+        File templateFile = new File(templatePath, "biomes.png");
+
+        if (this.useAlternateTemplates == true)
+        {
+            File tmpFile = new File(templatePath, "biomes_alt_" + (this.alternateTemplate + 1) + ".png");
+            if (tmpFile.exists() == true)
+            {
+                templateFile = tmpFile;
             }
         }
-        catch (IOException e)
-        {
-            PaintedBiomes.logger.warn("Failed to read single-image-template from '" + imageFile.getAbsolutePath() + "'");
-        }
+
+        this.imageData = this.readImageData(templateFile);
+        this.setTemplateDimensions();
+        this.setAreaBounds();
     }
 
-    private void setAreaBounds()
+    protected void setAreaBounds()
     {
         // Centered
         if (this.templateAlignmentMode == 0)

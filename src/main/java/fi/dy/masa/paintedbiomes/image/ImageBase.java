@@ -2,7 +2,11 @@ package fi.dy.masa.paintedbiomes.image;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.IOException;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
@@ -13,15 +17,17 @@ public abstract class ImageBase implements IImageReader
     protected final long randLong1;
     protected final long randLong2;
 
-    protected BufferedImage imageData;
     protected final int dimension;
     protected final long worldSeed;
 
-    protected final boolean useTemplateRotation;
+    protected final boolean useAlternateTemplates;
     protected final boolean useTemplateFlipping;
+    protected final boolean useTemplateRotation;
+    protected final int maxAlternateTemplates;
     protected final int unpaintedAreaBiomeID;
     protected final int templateUndefinedAreaBiomeID;
 
+    protected BufferedImage imageData;
     protected int imageWidth;
     protected int imageHeight;
     protected int areaSizeX;
@@ -29,6 +35,7 @@ public abstract class ImageBase implements IImageReader
 
     protected int templateRotation;
     protected int templateFlip;
+    protected int alternateTemplate;
 
     public ImageBase(int dimension, long seed)
     {
@@ -36,14 +43,39 @@ public abstract class ImageBase implements IImageReader
         this.worldSeed = seed;
 
         Configs conf = Configs.getConfig(this.dimension);
-        this.useTemplateRotation = conf.useTemplateRandomRotation;
+        this.useAlternateTemplates = conf.useAlternateTemplates;
         this.useTemplateFlipping = conf.useTemplateRandomFlipping;
+        this.useTemplateRotation = conf.useTemplateRandomRotation;
+        this.maxAlternateTemplates = conf.maxAlternateTemplates;
         this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
 
         rand.setSeed(this.worldSeed);
         this.randLong1 = rand.nextLong() / 2L * 2L + 1L;
         this.randLong2 = rand.nextLong() / 2L * 2L + 1L;
+    }
+
+    protected BufferedImage readImageData(File templateFile)
+    {
+        try
+        {
+            if (templateFile.exists() == true)
+            {
+                BufferedImage image = ImageIO.read(templateFile);
+
+                if (image != null)
+                {
+                    PaintedBiomes.logger.info("Successfully read template image from '" + templateFile.getAbsolutePath() + "'");
+                    return image;
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            PaintedBiomes.logger.warn("Failed to read template image from '" + templateFile.getAbsolutePath() + "'");
+        }
+
+        return null;
     }
 
     protected void setTemplateDimensions()
@@ -80,6 +112,9 @@ public abstract class ImageBase implements IImageReader
 
         r = rand.nextInt(4); // 0x1 = flip image X, 0x2 = flip image Y => 0..3
         this.templateFlip = this.useTemplateFlipping ? r : 0;
+
+        r = rand.nextInt(this.maxAlternateTemplates + 1);
+        this.alternateTemplate = this.useAlternateTemplates == true ? r : 0;
     }
 
     protected int getUnpaintedAreaBiomeID(int defaultBiomeID)

@@ -10,7 +10,7 @@ public class ImageHandler implements IImageReader
 {
     private static final TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
     private ImageCache regionImageCache;
-    private IImageReader singleImage;
+    private ImageSingle singleImage;
 
     private static File templateBasePathGlobal;
     private static File templateBasePathWorld;
@@ -81,13 +81,15 @@ public class ImageHandler implements IImageReader
         // Single template image mode, with some type of template repeating
         else if (configs.useTemplateRepeating == true)
         {
-            this.singleImage = new ImageSingleRepeating(this.dimension, seed, new File(this.templatePath, "biomes.png"));
+            this.singleImage = new ImageSingleRepeating(this.dimension, seed, this.templatePath);
+            this.singleImage.init();
             this.regionImageCache = null;
         }
         // Single template image mode, no repeating
         else
         {
-            this.singleImage = new ImageSingle(this.dimension, seed, new File(this.templatePath, "biomes.png"));
+            this.singleImage = new ImageSingle(this.dimension, seed, this.templatePath);
+            this.singleImage.init();
             this.regionImageCache = null;
         }
 
