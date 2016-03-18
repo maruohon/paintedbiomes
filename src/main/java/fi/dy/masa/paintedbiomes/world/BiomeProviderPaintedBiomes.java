@@ -5,28 +5,29 @@ import java.util.Random;
 
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.util.BlockPos;
 import net.minecraft.util.ReportedException;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeCache;
 import net.minecraft.world.biome.BiomeGenBase;
-import net.minecraft.world.biome.WorldChunkManager;
+import net.minecraft.world.biome.BiomeProvider;
 
-import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
-public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
+
+public class BiomeProviderPaintedBiomes extends BiomeProvider
 {
     protected BiomeCache biomeCache;
-    protected WorldChunkManager worldChunkManagerParent;
+    protected BiomeProvider biomeProviderParent;
     protected ImageHandler imageHandler;
 
-    public WorldChunkManagerPaintedBiomes(World world, WorldChunkManager worldChunkMgrParent, ImageHandler imageHandler)
+    public BiomeProviderPaintedBiomes(World world, BiomeProvider biomeProviderParent, ImageHandler imageHandler)
     {
-        super(world);
-        this.worldChunkManagerParent = worldChunkMgrParent;
+        super(world.getWorldInfo());
+        this.biomeProviderParent = biomeProviderParent;
         this.imageHandler = imageHandler;
         this.biomeCache = new BiomeCache(this);
     }
@@ -34,7 +35,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     @Override
     public List<BiomeGenBase> getBiomesToSpawnIn()
     {
-        return this.worldChunkManagerParent.getBiomesToSpawnIn();
+        return this.biomeProviderParent.getBiomesToSpawnIn();
     }
 
     @Override
@@ -46,7 +47,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
     @Override
     public BiomeGenBase getBiomeGenerator(BlockPos pos, BiomeGenBase biomeGenBaseIn)
     {
-        return this.biomeCache.func_180284_a(pos.getX(), pos.getZ(), biomeGenBaseIn);
+        return this.biomeCache.getBiome(pos.getX(), pos.getZ(), biomeGenBaseIn);
     }
 
     @Override
@@ -62,7 +63,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         int endZ = scaledZ + height;
 
         // Get the biomes from the regular WorldChunkManager for this dimension
-        biomes = this.worldChunkManagerParent.getBiomesForGeneration(biomes, scaledX, scaledZ, width, height);
+        biomes = this.biomeProviderParent.getBiomesForGeneration(biomes, scaledX, scaledZ, width, height);
 
         try
         {
@@ -70,7 +71,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
             {
                 for (int tmpX = scaledX; tmpX < endX; tmpX++, i++)
                 {
-                    biomes[i] = this.getBiomeFromTemplateAt(tmpX << 2, tmpZ << 2, biomes[i].biomeID);
+                    biomes[i] = this.getBiomeFromTemplateAt(tmpX << 2, tmpZ << 2, BiomeGenBase.getIdForBiome(biomes[i]));
                 }
             }
         }
@@ -114,7 +115,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         else
         {
             // Get the biomes from the regular WorldChunkManager for this dimension
-            biomes = this.worldChunkManagerParent.getBiomeGenAt(biomes, x, z, width, length, cacheFlag);
+            biomes = this.biomeProviderParent.getBiomeGenAt(biomes, x, z, width, length, cacheFlag);
 
             int endX = x + width;
             int endZ = z + length;
@@ -125,7 +126,7 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
                 {
                     for (int tmpX = x; tmpX < endX; tmpX++, i++)
                     {
-                        biomes[i] = this.getBiomeFromTemplateAt(tmpX, tmpZ, biomes[i].biomeID);
+                        biomes[i] = this.getBiomeFromTemplateAt(tmpX, tmpZ, BiomeGenBase.getIdForBiome(biomes[i]));
                     }
                 }
             }
@@ -156,60 +157,11 @@ public class WorldChunkManagerPaintedBiomes extends WorldChunkManager
         this.biomeCache.cleanupCache();
     }
 
-    @Override
-    public float[] getRainfall(float[] rainfall, int x, int z, int width, int height)
-    {
-        int size = width * height;
-        if (rainfall == null || rainfall.length < size)
-        {
-            rainfall = new float[size];
-        }
-
-        rainfall = this.worldChunkManagerParent.getRainfall(rainfall, x, z, width, height);
-        BiomeGenBase biomes[] = this.getBiomeGenAt(new BiomeGenBase[size], x, z, width, height, false);
-
-        int endX = x + width;
-        int endZ = z + height;
-
-        try
-        {
-            for (int i = 0, tmpZ = z; tmpZ < endZ; tmpZ++)
-            {
-                for (int tmpX = x; tmpX < endX; tmpX++, i++)
-                {
-                    if (this.imageHandler.isBiomeDefinedAt(tmpX, tmpZ) == true)
-                    {
-                        float f = (float)biomes[i].getIntRainfall() / 65536.0f;
-                        if (f > 1.0f)
-                        {
-                            f = 1.0f;
-                        }
-
-                        rainfall[i] = f;
-                    }
-                }
-            }
-        }
-        catch (Throwable throwable)
-        {
-            CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Invalid Biome id");
-            CrashReportCategory crashreportcategory = crashreport.makeCategory("DownfallBlock");
-            crashreportcategory.addCrashSection("downfalls[] size", Integer.valueOf(rainfall.length));
-            crashreportcategory.addCrashSection("x", Integer.valueOf(x));
-            crashreportcategory.addCrashSection("z", Integer.valueOf(z));
-            crashreportcategory.addCrashSection("w", Integer.valueOf(width));
-            crashreportcategory.addCrashSection("h", Integer.valueOf(height));
-            throw new ReportedException(crashreport);
-        }
-
-        return rainfall;
-    }
-
     @SideOnly(Side.CLIENT)
     @Override
     public float getTemperatureAtHeight(float p_76939_1_, int p_76939_2_)
     {
-        return this.worldChunkManagerParent.getTemperatureAtHeight(p_76939_1_, p_76939_2_);
+        return this.biomeProviderParent.getTemperatureAtHeight(p_76939_1_, p_76939_2_);
     }
 
     @Override

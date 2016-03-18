@@ -6,7 +6,7 @@ public class ColorToBiomeMapping
 {
     private static ColorToBiomeMapping instance;
     /** Mapping from an RGB color value to a Biome ID */
-    private TIntObjectHashMap<Integer> colorToBiomeMappings;
+    private final TIntObjectHashMap<Integer> colorToBiomeMappings;
 
     public ColorToBiomeMapping()
     {

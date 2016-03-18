@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.event.FMLServerAboutToStartEvent;
 
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-    acceptableRemoteVersions="*", acceptedMinecraftVersions = "1.8,1.8.8,1.8.9")
+    acceptableRemoteVersions="*", acceptedMinecraftVersions = "1.9")
 public class PaintedBiomes
 {
     @Instance(Reference.MOD_ID)

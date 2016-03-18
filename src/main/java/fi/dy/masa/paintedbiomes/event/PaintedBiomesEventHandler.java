@@ -3,12 +3,12 @@ package fi.dy.masa.paintedbiomes.event;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.WorldChunkManager;
-import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.chunk.IChunkGenerator;
 import net.minecraft.world.gen.ChunkProviderEnd;
 import net.minecraft.world.gen.ChunkProviderFlat;
-import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderHell;
+import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderServer;
 
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
@@ -22,9 +22,9 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldExc
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
+import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
 import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
-import fi.dy.masa.paintedbiomes.world.WorldChunkManagerPaintedBiomes;
 
 public class PaintedBiomesEventHandler
 {
@@ -59,7 +59,7 @@ public class PaintedBiomesEventHandler
     {
         if (Configs.getEffectiveMainConfig().useGenLayer == false)
         {
-            ImageHandler.removeImageHandler(event.world.provider.getDimensionId());
+            ImageHandler.removeImageHandler(event.world.provider.getDimension());
         }
     }
 
@@ -86,39 +86,39 @@ public class PaintedBiomesEventHandler
             return;
         }
 
-        int dimension = world.provider.getDimensionId();
+        int dimension = world.provider.getDimension();
 
         for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
         {
             if (dimension == i)
             {
-                overrideWorldChunkManager(dimension, world);
+                overrideBiomeProvider(dimension, world);
                 break;
             }
         }
     }
 
-    private static void overrideWorldChunkManager(int dimension, World world)
+    private static void overrideBiomeProvider(int dimension, World world)
     {
-        if (world.getWorldChunkManager() instanceof WorldChunkManagerPaintedBiomes)
+        if (world.getBiomeProvider() instanceof BiomeProviderPaintedBiomes)
         {
             return;
         }
 
-        PaintedBiomes.logger.info(String.format("Wrapping the WorldChunkManager (of type %s) of dimension %d with %s",
-                world.getWorldChunkManager().getClass().getName(), dimension, WorldChunkManagerPaintedBiomes.class.getName()));
+        PaintedBiomes.logger.info(String.format("Wrapping the BiomeProvider (of type %s) of dimension %d with %s",
+                world.getBiomeProvider().getClass().getName(), dimension, BiomeProviderPaintedBiomes.class.getName()));
 
         try
         {
             // Re-initialize the ImageHandler when a world loads, to update config values etc.
             ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init(world.getSeed());
 
-            WorldChunkManager newWCM = new WorldChunkManagerPaintedBiomes(world, world.getWorldChunkManager(), imageHandler);
-            ReflectionHelper.setPrivateValue(WorldProvider.class, world.provider, newWCM, "field_76578_c", "c", "worldChunkMgr");
+            BiomeProvider newBiomeProvider = new BiomeProviderPaintedBiomes(world, world.getBiomeProvider(), imageHandler);
+            ReflectionHelper.setPrivateValue(WorldProvider.class, world.provider, newBiomeProvider, "field_76578_c", "c", "worldChunkMgr");
         }
         catch (UnableToAccessFieldException e)
         {
-            PaintedBiomes.logger.error("Failed to wrap the WorldChunkManager of dimension " + dimension);
+            PaintedBiomes.logger.error("Failed to wrap the BiomeProvider of dimension " + dimension);
         }
     }
 
@@ -129,7 +129,7 @@ public class PaintedBiomesEventHandler
             return;
         }
 
-        int dimension = world.provider.getDimensionId();
+        int dimension = world.provider.getDimension();
 
         for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
         {
@@ -146,7 +146,7 @@ public class PaintedBiomesEventHandler
         Configs conf = Configs.getConfig(dimension);
         if (conf.overrideChunkProvider == true && world instanceof WorldServer)
         {
-            IChunkProvider newChunkProvider = getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
+            IChunkGenerator newChunkProvider = getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
             if (newChunkProvider == null)
             {
                 PaintedBiomes.logger.warn("Invalid/unknown ChunkProvider type '" + conf.chunkProviderType + "'.");
@@ -154,27 +154,25 @@ public class PaintedBiomesEventHandler
             }
 
             PaintedBiomes.logger.info(String.format("Attempting to override the ChunkProvider (of type %s) of dimension %d with %s",
-                    ((WorldServer)world).theChunkProviderServer.serverChunkGenerator.getClass().getName(), dimension, newChunkProvider.getClass().getName()));
+                    ((ChunkProviderServer)world.getChunkProvider()).chunkGenerator.getClass().getName(), dimension, newChunkProvider.getClass().getName()));
 
             try
             {
-                ((WorldServer)world).theChunkProviderServer.serverChunkGenerator = newChunkProvider;
-                ((ChunkProviderServer)world.getChunkProvider()).serverChunkGenerator = newChunkProvider;
+                ReflectionHelper.setPrivateValue(ChunkProviderServer.class, (ChunkProviderServer)world.getChunkProvider(), newChunkProvider, "field_186029_c", "c", "chunkGenerator");
             }
-            catch (Exception e)
+            catch (UnableToAccessFieldException e)
             {
                 PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass().getName());
                 PaintedBiomes.logger.warn("" + e.getMessage());
-                //e.printStackTrace();
             }
         }
     }
 
-    private static IChunkProvider getNewChunkProvider(World world, String chunkProviderType, String generatorOptions)
+    private static IChunkGenerator getNewChunkProvider(World world, String chunkProviderType, String generatorOptions)
     {
         if (chunkProviderType.equals("VANILLA_DEFAULT"))
         {
-            return new ChunkProviderGenerate(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
+            return new ChunkProviderOverworld(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
         }
         else if (chunkProviderType.equals("VANILLA_FLAT"))
         {
@@ -186,7 +184,7 @@ public class PaintedBiomesEventHandler
         }
         else if (chunkProviderType.equals("VANILLA_END"))
         {
-            return new ChunkProviderEnd(world, world.getSeed());
+            return new ChunkProviderEnd(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed());
         }
 
         return null;
