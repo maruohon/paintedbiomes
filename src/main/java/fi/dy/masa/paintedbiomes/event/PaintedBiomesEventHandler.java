@@ -10,7 +10,12 @@ import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderHell;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderServer;
-
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
+import fi.dy.masa.paintedbiomes.config.Configs;
+import fi.dy.masa.paintedbiomes.image.ImageHandler;
+import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -18,13 +23,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldException;
-
-import fi.dy.masa.paintedbiomes.PaintedBiomes;
-import fi.dy.masa.paintedbiomes.config.Configs;
-import fi.dy.masa.paintedbiomes.image.ImageHandler;
-import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
-import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
-import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 
 public class PaintedBiomesEventHandler
 {
@@ -40,8 +38,8 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        overrideChunkProvider(event.world);
-        overrideWorldChunkManager(event.world);
+        overrideChunkProvider(event.getWorld());
+        overrideWorldChunkManager(event.getWorld());
     }
 
     @SubscribeEvent
@@ -50,8 +48,8 @@ public class PaintedBiomesEventHandler
         // The initial world spawn position is created before the WorldEvent.Load fires, so we
         // need this event to cover that case. Otherwise a newly created world (no existing level.dat file yet)
         // will have a mess of regular terrain generation chunks near the spawn chunk...
-        overrideChunkProvider(event.world);
-        overrideWorldChunkManager(event.world);
+        overrideChunkProvider(event.getWorld());
+        overrideWorldChunkManager(event.getWorld());
     }
 
     @SubscribeEvent
@@ -59,7 +57,7 @@ public class PaintedBiomesEventHandler
     {
         if (Configs.getEffectiveMainConfig().useGenLayer == false)
         {
-            ImageHandler.removeImageHandler(event.world.provider.getDimension());
+            ImageHandler.removeImageHandler(event.getWorld().provider.getDimension());
         }
     }
 
@@ -72,10 +70,10 @@ public class PaintedBiomesEventHandler
         }
 
         PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
-        ImageHandler.getImageHandler(0).init(event.seed);
-        event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType, "");
-        event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType, "");
-        event.newBiomeGens[2] = event.newBiomeGens[0];
+        ImageHandler.getImageHandler(0).init(event.getSeed());
+        event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(), event.getOriginalBiomeGens()[0], event.getWorldType(), "");
+        event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(), event.getOriginalBiomeGens()[1], event.getWorldType(), "");
+        event.getNewBiomeGens()[2] = event.getNewBiomeGens()[0];
     }
 
     private static void overrideWorldChunkManager(World world)
@@ -114,7 +112,7 @@ public class PaintedBiomesEventHandler
             ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init(world.getSeed());
 
             BiomeProvider newBiomeProvider = new BiomeProviderPaintedBiomes(world, world.getBiomeProvider(), imageHandler);
-            ReflectionHelper.setPrivateValue(WorldProvider.class, world.provider, newBiomeProvider, "field_76578_c", "c", "worldChunkMgr");
+            ReflectionHelper.setPrivateValue(WorldProvider.class, world.provider, newBiomeProvider, "field_76578_c", "biomeProvider");
         }
         catch (UnableToAccessFieldException e)
         {
@@ -158,7 +156,7 @@ public class PaintedBiomesEventHandler
 
             try
             {
-                ReflectionHelper.setPrivateValue(ChunkProviderServer.class, (ChunkProviderServer)world.getChunkProvider(), newChunkProvider, "field_186029_c", "c", "chunkGenerator");
+                ReflectionHelper.setPrivateValue(ChunkProviderServer.class, (ChunkProviderServer)world.getChunkProvider(), newChunkProvider, "field_186029_c", "chunkGenerator");
             }
             catch (UnableToAccessFieldException e)
             {

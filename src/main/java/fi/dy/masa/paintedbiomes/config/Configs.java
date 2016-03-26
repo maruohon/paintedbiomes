@@ -2,19 +2,16 @@ package fi.dy.masa.paintedbiomes.config;
 
 import java.io.File;
 import java.util.Iterator;
-
 import net.minecraft.world.biome.BiomeGenBase;
-
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.common.config.ConfigCategory;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.config.ConfigCategory;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 
 public class Configs
 {
@@ -212,43 +209,43 @@ public class Configs
         String category = "TemplateImage";
 
         prop = conf.get(category, "maxAlternateTemplates", this.maxAlternateTemplates);
-        prop.comment = "The maximum number of alternate templates to use. NOTE: Especially with large images, the memory requirements can increase significantly!!";
+        prop.setComment("The maximum number of alternate templates to use. NOTE: Especially with large images, the memory requirements can increase significantly!!");
         this.maxAlternateTemplates = this.checkAndFixConfigValueInt("maxAlternateTemplates", prop, 0, 10, 0);
 
         prop = conf.get(category, "templateAlignmentMode", this.templateAlignmentMode);
-        prop.comment = "When using a single template image, how the template image is aligned in the world. The alignment point is defined by templateAlignmentX and templateAlignmentZ. 0 = centered, 1 = top left, 2 = top right, 3 = bottom right, 4 = bottom left.";
+        prop.setComment("When using a single template image, how the template image is aligned in the world. The alignment point is defined by templateAlignmentX and templateAlignmentZ. 0 = centered, 1 = top left, 2 = top right, 3 = bottom right, 4 = bottom left.");
         this.templateAlignmentMode = this.checkAndFixConfigValueInt("templateAlignmentMode", prop, 0, 4, 0);
 
         prop = conf.get(category, "templateAlignmentX", this.templateAlignmentX);
-        prop.comment = "The world X coordinate where the selected point (templateAlignmentMode) of the template image is aligned.";
+        prop.setComment("The world X coordinate where the selected point (templateAlignmentMode) of the template image is aligned.");
         this.templateAlignmentX = prop.getInt();
 
         prop = conf.get(category, "templateAlignmentZ", this.templateAlignmentZ);
-        prop.comment = "The world Z coordinate where the selected point (templateAlignmentMode) of the template image is aligned.";
+        prop.setComment("The world Z coordinate where the selected point (templateAlignmentMode) of the template image is aligned.");
         this.templateAlignmentZ = prop.getInt();
 
         prop = conf.get(category, "templateUndefinedAreaBiomeID", this.templateUndefinedAreaBiome);
-        prop.comment = "How to handle \"undefined\" (= completely transparent) areas within the template image area(s). -1 = Use the biome from regular terrain generation, 0..255 = the biome ID to use.";
+        prop.setComment("How to handle \"undefined\" (= completely transparent) areas within the template image area(s). -1 = Use the biome from regular terrain generation, 0..255 = the biome ID to use.");
         this.templateUndefinedAreaBiome = this.checkAndFixBiomeID("templateUndefinedAreaBiomeID", prop, -1);
 
         prop = conf.get(category, "unpaintedAreaBiomeID", this.unpaintedAreaBiome);
-        prop.comment = "Biome handling outside of the template image(s). -1 = Use the biome from regular terrain generation, 0..255 = the Biome ID to use.";
+        prop.setComment("Biome handling outside of the template image(s). -1 = Use the biome from regular terrain generation, 0..255 = the Biome ID to use.");
         this.unpaintedAreaBiome = this.checkAndFixBiomeID("unpaintedAreaBiomeID", prop, -1);
 
         prop = conf.get(category, "useAlternateTemplates", this.useAlternateTemplates);
-        prop.comment = "Enable using randomly selected alternate templates (based on the world seed and the relative location).";
+        prop.setComment("Enable using randomly selected alternate templates (based on the world seed and the relative location).");
         this.useAlternateTemplates = prop.getBoolean();
 
         prop = conf.get(category, "useSingleTemplateImage", this.useSingleTemplateImage);
-        prop.comment = "true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).";
+        prop.setComment("true = Use only one image template (biomes.png). false = Use multiple image templates for different regions of the world (one image per region file, aka. 512x512 block area).");
         this.useSingleTemplateImage = prop.getBoolean();
 
         prop = conf.get(category, "useTemplateRandomFlipping", this.useTemplateRandomFlipping);
-        prop.comment = "Enable random flipping/mirroring of the template images (based on the world seed and the relative location).";
+        prop.setComment("Enable random flipping/mirroring of the template images (based on the world seed and the relative location).");
         this.useTemplateRandomFlipping = prop.getBoolean();
 
         prop = conf.get(category, "useTemplateRandomRotation", this.useTemplateRandomRotation);
-        prop.comment = "Enable random rotation of the template images (based on the world seed and the relative location).";
+        prop.setComment("Enable random rotation of the template images (based on the world seed and the relative location).");
         this.useTemplateRandomRotation = prop.getBoolean();
 
         category = "TemplateRepeating";
@@ -257,52 +254,52 @@ public class Configs
         cat.setComment("Template repeating options. Template repeating only works in the Single Template Image mode.");
 
         prop = conf.get(category, "repeatTemplateNegativeX", this.repeatTemplateNegativeX);
-        prop.comment = "Repeat the template image in the negative X direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        prop.setComment("Repeat the template image in the negative X direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image");
         this.repeatTemplateNegativeX = this.checkAndFixConfigValueInt("repeatTemplateNegativeX", prop, 0, 2, 0);
 
         prop = conf.get(category, "repeatTemplateNegativeZ", this.repeatTemplateNegativeZ);
-        prop.comment = "Repeat the template image in the negative Z direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        prop.setComment("Repeat the template image in the negative Z direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image");
         this.repeatTemplateNegativeZ = this.checkAndFixConfigValueInt("repeatTemplateNegativeZ", prop, 0, 2, 0);
 
         prop = conf.get(category, "repeatTemplatePositiveX", this.repeatTemplatePositiveX);
-        prop.comment = "Repeat the template image in the positive X direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        prop.setComment("Repeat the template image in the positive X direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image");
         this.repeatTemplatePositiveX = this.checkAndFixConfigValueInt("repeatTemplatePositiveX", prop, 0, 2, 0);
 
         prop = conf.get(category, "repeatTemplatePositiveZ", this.repeatTemplatePositiveZ);
-        prop.comment = "Repeat the template image in the positive Z direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image";
+        prop.setComment("Repeat the template image in the positive Z direction. 0 = disabled, 1 = repeat the entire template, 2 = repeat/continue the biome of the edge-most pixel of the template image");
         this.repeatTemplatePositiveZ = this.checkAndFixConfigValueInt("repeatTemplatePositiveZ", prop, 0, 2, 0);
 
         prop = conf.get(category, "useTemplateRepeating", this.useTemplateRepeating);
-        prop.comment = "Enable template repeating. Note that you have to also select the directions that you want to repeat in and the repeating method.";
+        prop.setComment("Enable template repeating. Note that you have to also select the directions that you want to repeat in and the repeating method.");
         this.useTemplateRepeating = prop.getBoolean();
 
         category = "Generic";
 
         prop = conf.get(category, "overrideChunkProvider", this.overrideChunkProvider);
-        prop.comment = "Set to true to use an overridden ChunkProvider. Select the type in chunkProviderType.";
+        prop.setComment("Set to true to use an overridden ChunkProvider. Select the type in chunkProviderType.");
         this.overrideChunkProvider = prop.getBoolean();
 
         prop = conf.get(category, "chunkProviderType", this.chunkProviderType);
-        prop.comment = "The ChunkProvider to use. Valid values: VANILLA_DEFAULT, VANILLA_FLAT, VANILLA_HELL, VANILLA_END";
+        prop.setComment("The ChunkProvider to use. Valid values: VANILLA_DEFAULT, VANILLA_FLAT, VANILLA_HELL, VANILLA_END");
         this.chunkProviderType = prop.getString() != null ? prop.getString() : "";
 
         prop = conf.get(category, "chunkProviderOptions", this.chunkProviderOptions);
-        prop.comment = "Extra options for the ChunkProvider (used for FLAT and DEFAULT).";
+        prop.setComment("Extra options for the ChunkProvider (used for FLAT and DEFAULT).");
         this.chunkProviderOptions = prop.getString() != null ? prop.getString() : "";
 
         // These config values only exist and are used in the non-per-dimension configs
         if (this.isMaster == true)
         {
             prop = conf.get(category, "enabledInDimensions", this.enabledInDimensions);
-            prop.comment = "A list of dimensions where Painted Biomes should be enabled.";
+            prop.setComment("A list of dimensions where Painted Biomes should be enabled.");
             this.enabledInDimensions = prop.getIntList();
 
             prop = conf.get(category, "useCustomColorsAsDefaults", this.useCustomColorMappings);
-            prop.comment = "This only affects whether the missing ColorToBiomeMappings values, when added, use the custom colors from Amidst, or if they just map the Biome ID to the red channel. true = Use custom colors from Amidst as defaults, false = Map biome ID to red channel.";
+            prop.setComment("This only affects whether the missing ColorToBiomeMappings values, when added, use the custom colors from Amidst, or if they just map the Biome ID to the red channel. true = Use custom colors from Amidst as defaults, false = Map biome ID to red channel.");
             this.useCustomColorMappings = prop.getBoolean();
 
             prop = conf.get(category, "useGenLayer", this.useGenLayer);
-            prop.comment = "Use biome GenLayer overrides instead of a WorldChunkManager wrapper. This only works in the Overworld, and not with many custom WorldTypes. This is the method used until and including the v0.3.0 release.";
+            prop.setComment("Use biome GenLayer overrides instead of a WorldChunkManager wrapper. This only works in the Overworld, and not with many custom WorldTypes. This is the method used until and including the v0.3.0 release.");
             this.useGenLayer = prop.getBoolean();
 
             this.readColorToBiomeMappings(conf);
@@ -402,7 +399,7 @@ public class Configs
             }
 
             // Update the comment, in case the biome ID has been changed since the config was first generated
-            prop.comment = "Biome name: " + biome.getBiomeName() + ", Biome ID: " + BiomeGenBase.getIdForBiome(biome) + " (Color as int: " + color + ")";
+            prop.setComment("Biome name: " + biome.getBiomeName() + ", Biome ID: " + BiomeGenBase.getIdForBiome(biome) + " (Color as int: " + color + ")");
         }
     }
 
