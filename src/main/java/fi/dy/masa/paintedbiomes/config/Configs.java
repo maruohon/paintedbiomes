@@ -321,7 +321,7 @@ public class Configs
         ColorToBiomeMapping colorToBiomeMapping = new ColorToBiomeMapping();
 
         // Iterate over the biome array and add a color-to-biome mapping for all of them
-        Iterator<BiomeGenBase> iterator = BiomeGenBase.biomeRegistry.iterator();
+        Iterator<BiomeGenBase> iterator = BiomeGenBase.REGISTRY.iterator();
 
         while (iterator.hasNext() == true)
         {
@@ -371,7 +371,7 @@ public class Configs
             if (oldId != -1)
             {
                 BiomeGenBase oldBiome = null;
-                Iterator<BiomeGenBase> iteratorTmp = BiomeGenBase.biomeRegistry.iterator();
+                Iterator<BiomeGenBase> iteratorTmp = BiomeGenBase.REGISTRY.iterator();
 
                 while (iteratorTmp.hasNext() == true)
                 {
