@@ -2,16 +2,16 @@ package fi.dy.masa.paintedbiomes.config;
 
 import java.io.File;
 import java.util.Iterator;
-import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.DimensionManager;
+import net.minecraftforge.common.config.ConfigCategory;
+import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.common.config.Property;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 import fi.dy.masa.paintedbiomes.reference.Reference;
 import gnu.trove.map.hash.TIntObjectHashMap;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.common.config.ConfigCategory;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 
 public class Configs
 {
@@ -321,11 +321,11 @@ public class Configs
         ColorToBiomeMapping colorToBiomeMapping = new ColorToBiomeMapping();
 
         // Iterate over the biome array and add a color-to-biome mapping for all of them
-        Iterator<BiomeGenBase> iterator = BiomeGenBase.REGISTRY.iterator();
+        Iterator<Biome> iterator = Biome.REGISTRY.iterator();
 
         while (iterator.hasNext() == true)
         {
-            BiomeGenBase biome = iterator.next();
+            Biome biome = iterator.next();
             if (biome == null)
             {
                 continue;
@@ -333,7 +333,7 @@ public class Configs
 
             Property prop;
             // Default mapping is from the Biome ID to the red channel
-            int color = (BiomeGenBase.getIdForBiome(biome) & 0xFF) << 16;
+            int color = (Biome.getIdForBiome(biome) & 0xFF) << 16;
 
             // Mapping found in the config, use that color value
             if (configCategory.containsKey(biome.getBiomeName()) == true)
@@ -370,13 +370,13 @@ public class Configs
             // The color is already in use, print a warning
             if (oldId != -1)
             {
-                BiomeGenBase oldBiome = null;
-                Iterator<BiomeGenBase> iteratorTmp = BiomeGenBase.REGISTRY.iterator();
+                Biome oldBiome = null;
+                Iterator<Biome> iteratorTmp = Biome.REGISTRY.iterator();
 
                 while (iteratorTmp.hasNext() == true)
                 {
-                    BiomeGenBase biomeTmp = iteratorTmp.next();
-                    if (biomeTmp != null && BiomeGenBase.getIdForBiome(biomeTmp) == oldId)
+                    Biome biomeTmp = iteratorTmp.next();
+                    if (biomeTmp != null && Biome.getIdForBiome(biomeTmp) == oldId)
                     {
                         oldBiome = biomeTmp;
                         break;
@@ -386,7 +386,7 @@ public class Configs
                 String biomeName = oldBiome != null ? oldBiome.getBiomeName() : "ERROR PERROR PUERTO RICO!!";
 
                 PaintedBiomes.logger.warn("**** WARNING **** WARNING **** WARNING ****");
-                PaintedBiomes.logger.warn(String.format("The color %06X (%d) (attempted to use for biome '%s', ID: %d) is already in use!", color, color, biome.getBiomeName(), BiomeGenBase.getIdForBiome(biome)));
+                PaintedBiomes.logger.warn(String.format("The color %06X (%d) (attempted to use for biome '%s', ID: %d) is already in use!", color, color, biome.getBiomeName(), Biome.getIdForBiome(biome)));
                 PaintedBiomes.logger.warn(String.format("The biome already using it is '%s', ID %d.", biomeName, oldId));
                 PaintedBiomes.logger.warn("This new color mapping HAS NOT been added to the active mappings. Please fix this conflict in the configuration file!");
                 PaintedBiomes.logger.warn("-------------------------------------------");
@@ -395,11 +395,11 @@ public class Configs
             {
                 // For simplicity, when generating terrain, the biome is always read from the mapping, even in case of a red channel mapping.
                 // So basically we want to always add all the existing biomes to the color-to-biome map.
-                colorToBiomeMapping.addMapping(color, BiomeGenBase.getIdForBiome(biome));
+                colorToBiomeMapping.addMapping(color, Biome.getIdForBiome(biome));
             }
 
             // Update the comment, in case the biome ID has been changed since the config was first generated
-            prop.setComment("Biome name: " + biome.getBiomeName() + ", Biome ID: " + BiomeGenBase.getIdForBiome(biome) + " (Color as int: " + color + ")");
+            prop.setComment("Biome name: " + biome.getBiomeName() + ", Biome ID: " + Biome.getIdForBiome(biome) + " (Color as int: " + color + ")");
         }
     }
 
@@ -422,7 +422,7 @@ public class Configs
         // FIXME Hard coded max biome id...
         int biomeId = this.checkAndFixConfigValueInt(configName, prop, -1, 255, defaultBiomeId);
 
-        if (biomeId >= 0 && BiomeGenBase.getBiomeForId(biomeId) == null)
+        if (biomeId >= 0 && Biome.getBiomeForId(biomeId) == null)
         {
             PaintedBiomes.logger.warn(String.format("Invalid/non-existing Biome ID '%d' for config %s, setting the value to '%d'.", biomeId, configName, defaultBiomeId));
             biomeId = defaultBiomeId;

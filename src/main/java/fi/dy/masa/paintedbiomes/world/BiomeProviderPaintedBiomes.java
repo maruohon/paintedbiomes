@@ -2,19 +2,16 @@ package fi.dy.masa.paintedbiomes.world;
 
 import java.util.List;
 import java.util.Random;
-
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeCache;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.BiomeProvider;
-
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
 
@@ -33,30 +30,30 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public List<BiomeGenBase> getBiomesToSpawnIn()
+    public List<Biome> getBiomesToSpawnIn()
     {
         return this.biomeProviderParent.getBiomesToSpawnIn();
     }
 
     @Override
-    public BiomeGenBase getBiomeGenerator(BlockPos pos)
+    public Biome getBiomeGenerator(BlockPos pos)
     {
-        return this.getBiomeGenerator(pos, (BiomeGenBase)null);
+        return this.getBiomeGenerator(pos, null);
     }
 
     @Override
-    public BiomeGenBase getBiomeGenerator(BlockPos pos, BiomeGenBase biomeGenBaseIn)
+    public Biome getBiomeGenerator(BlockPos pos, Biome biomeGenBaseIn)
     {
         return this.biomeCache.getBiome(pos.getX(), pos.getZ(), biomeGenBaseIn);
     }
 
     @Override
-    public BiomeGenBase[] getBiomesForGeneration(BiomeGenBase[] biomes, int scaledX, int scaledZ, int width, int height)
+    public Biome[] getBiomesForGeneration(Biome[] biomes, int scaledX, int scaledZ, int width, int height)
     {
         int size = width * height;
         if (biomes == null || biomes.length < size)
         {
-            biomes = new BiomeGenBase[size];
+            biomes = new Biome[size];
         }
 
         int endX = scaledX + width;
@@ -71,7 +68,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
             {
                 for (int tmpX = scaledX; tmpX < endX; tmpX++, i++)
                 {
-                    biomes[i] = this.getBiomeFromTemplateAt(tmpX << 2, tmpZ << 2, BiomeGenBase.getIdForBiome(biomes[i]));
+                    biomes[i] = this.getBiomeFromTemplateAt(tmpX << 2, tmpZ << 2, Biome.getIdForBiome(biomes[i]));
                 }
             }
         }
@@ -91,24 +88,24 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public BiomeGenBase[] loadBlockGeneratorData(BiomeGenBase[] oldBiomeList, int x, int z, int width, int depth)
+    public Biome[] loadBlockGeneratorData(Biome[] oldBiomeList, int x, int z, int width, int depth)
     {
         return this.getBiomeGenAt(oldBiomeList, x, z, width, depth, true);
     }
 
     @Override
-    public BiomeGenBase[] getBiomeGenAt(BiomeGenBase[] biomes, int x, int z, int width, int length, boolean cacheFlag)
+    public Biome[] getBiomeGenAt(Biome[] biomes, int x, int z, int width, int length, boolean cacheFlag)
     {
         int size = width * length;
         if (biomes == null || biomes.length < size)
         {
-            biomes = new BiomeGenBase[size];
+            biomes = new Biome[size];
         }
 
         // Get cached biomes
         if (cacheFlag == true && width == 16 && length == 16 && (x & 0xF) == 0 && (z & 0xF) == 0)
         {
-            BiomeGenBase[] bgb = this.biomeCache.getCachedBiomes(x, z);
+            Biome[] bgb = this.biomeCache.getCachedBiomes(x, z);
             System.arraycopy(bgb, 0, biomes, 0, size);
             return biomes;
         }
@@ -126,7 +123,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
                 {
                     for (int tmpX = x; tmpX < endX; tmpX++, i++)
                     {
-                        biomes[i] = this.getBiomeFromTemplateAt(tmpX, tmpZ, BiomeGenBase.getIdForBiome(biomes[i]));
+                        biomes[i] = this.getBiomeFromTemplateAt(tmpX, tmpZ, Biome.getIdForBiome(biomes[i]));
                     }
                 }
             }
@@ -146,9 +143,9 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
         return biomes;
     }
 
-    protected BiomeGenBase getBiomeFromTemplateAt(int blockX, int blockZ, int defaultBiomeID)
+    protected Biome getBiomeFromTemplateAt(int blockX, int blockZ, int defaultBiomeID)
     {
-        return BiomeGenBase.getBiome(this.imageHandler.getBiomeIDAt(blockX, blockZ, defaultBiomeID));
+        return Biome.getBiome(this.imageHandler.getBiomeIDAt(blockX, blockZ, defaultBiomeID));
     }
 
     @Override
@@ -165,7 +162,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public boolean areBiomesViable(int x, int z, int r, List<BiomeGenBase> list)
+    public boolean areBiomesViable(int x, int z, int r, List<Biome> list)
     {
         int startX = x - r >> 2;
         int startZ = z - r >> 2;
@@ -175,7 +172,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
         int height = endZ - startZ + 1;
         int size = width * height;
 
-        BiomeGenBase[] biomes = this.getBiomesForGeneration(new BiomeGenBase[size], startX, startZ, width, height);
+        Biome[] biomes = this.getBiomesForGeneration(new Biome[size], startX, startZ, width, height);
 
         for (int i = 0; i < size; i++)
         {
@@ -189,7 +186,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public BlockPos findBiomePosition(int x, int z, int range, List<BiomeGenBase> biomes, Random random)
+    public BlockPos findBiomePosition(int x, int z, int range, List<Biome> biomes, Random random)
     {
         int startX = x - range >> 2;
         int startZ = z - range >> 2;
@@ -200,7 +197,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
         int size = width * height;
         BlockPos blockPos = null;
 
-        BiomeGenBase[] bgb = this.getBiomesForGeneration(new BiomeGenBase[size], startX, startZ, width, height);
+        Biome[] bgb = this.getBiomesForGeneration(new Biome[size], startX, startZ, width, height);
 
         for (int i = 0, matches = 0; i < size; i++)
         {
