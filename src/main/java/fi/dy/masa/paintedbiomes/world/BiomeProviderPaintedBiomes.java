@@ -36,13 +36,13 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public Biome getBiomeGenerator(BlockPos pos)
+    public Biome getBiome(BlockPos pos)
     {
-        return this.getBiomeGenerator(pos, null);
+        return this.getBiome(pos, null);
     }
 
     @Override
-    public Biome getBiomeGenerator(BlockPos pos, Biome biomeGenBaseIn)
+    public Biome getBiome(BlockPos pos, Biome biomeGenBaseIn)
     {
         return this.biomeCache.getBiome(pos.getX(), pos.getZ(), biomeGenBaseIn);
     }
@@ -88,13 +88,13 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public Biome[] loadBlockGeneratorData(Biome[] oldBiomeList, int x, int z, int width, int depth)
+    public Biome[] getBiomes(Biome[] oldBiomeList, int x, int z, int width, int depth)
     {
-        return this.getBiomeGenAt(oldBiomeList, x, z, width, depth, true);
+        return this.getBiomes(oldBiomeList, x, z, width, depth, true);
     }
 
     @Override
-    public Biome[] getBiomeGenAt(Biome[] biomes, int x, int z, int width, int length, boolean cacheFlag)
+    public Biome[] getBiomes(Biome[] biomes, int x, int z, int width, int length, boolean cacheFlag)
     {
         int size = width * length;
         if (biomes == null || biomes.length < size)
@@ -112,7 +112,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
         else
         {
             // Get the biomes from the regular WorldChunkManager for this dimension
-            biomes = this.biomeProviderParent.getBiomeGenAt(biomes, x, z, width, length, cacheFlag);
+            biomes = this.biomeProviderParent.getBiomes(biomes, x, z, width, length, cacheFlag);
 
             int endX = x + width;
             int endZ = z + length;
