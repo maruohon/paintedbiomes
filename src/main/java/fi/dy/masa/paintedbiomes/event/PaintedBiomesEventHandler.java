@@ -1,5 +1,6 @@
 package fi.dy.masa.paintedbiomes.event;
 
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
@@ -10,12 +11,7 @@ import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderHell;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderServer;
-import fi.dy.masa.paintedbiomes.PaintedBiomes;
-import fi.dy.masa.paintedbiomes.config.Configs;
-import fi.dy.masa.paintedbiomes.image.ImageHandler;
-import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
-import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
-import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
+import net.minecraft.world.gen.ChunkProviderSettings;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -23,6 +19,12 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldException;
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
+import fi.dy.masa.paintedbiomes.config.Configs;
+import fi.dy.masa.paintedbiomes.image.ImageHandler;
+import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 
 public class PaintedBiomesEventHandler
 {
@@ -71,8 +73,13 @@ public class PaintedBiomesEventHandler
 
         PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
         ImageHandler.getImageHandler(0).init(event.getSeed());
-        event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(), event.getOriginalBiomeGens()[0], event.getWorldType(), "");
-        event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(), event.getOriginalBiomeGens()[1], event.getWorldType(), "");
+
+        event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(), event.getOriginalBiomeGens()[0],
+                event.getWorldType(), ChunkProviderSettings.Factory.jsonToFactory("").build());
+
+        event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(), event.getOriginalBiomeGens()[1],
+                event.getWorldType(), ChunkProviderSettings.Factory.jsonToFactory("").build());
+
         event.getNewBiomeGens()[2] = event.getNewBiomeGens()[0];
     }
 
@@ -182,7 +189,7 @@ public class PaintedBiomesEventHandler
         }
         else if (chunkProviderType.equals("VANILLA_END"))
         {
-            return new ChunkProviderEnd(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed());
+            return new ChunkProviderEnd(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed(), new BlockPos(100, 50, 0));
         }
 
         return null;
