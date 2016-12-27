@@ -11,7 +11,7 @@ import fi.dy.masa.paintedbiomes.reference.Reference;
 
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.MOD_VERSION,
-    acceptableRemoteVersions="*", acceptedMinecraftVersions = "1.11")
+    acceptableRemoteVersions="*", acceptedMinecraftVersions = "[1.11,1.11.2]")
 public class PaintedBiomes
 {
     @Mod.Instance(Reference.MOD_ID)
