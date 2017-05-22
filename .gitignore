@@ -1,7 +1,9 @@
+*.launch
+.classpath
 .gradle
+.project
 .settings
 bin/
 build/
 eclipse/
-.classpath
-.project
+libs/
