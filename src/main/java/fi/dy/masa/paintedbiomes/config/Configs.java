@@ -1,12 +1,14 @@
 package fi.dy.masa.paintedbiomes.config;
 
 import java.io.File;
-import java.util.Iterator;
+import java.util.Map;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
@@ -16,10 +18,9 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 public class Configs
 {
     private static Configs globalConfigs;
-    private static TIntObjectHashMap<Configs> globalPerDimConfigs = new TIntObjectHashMap<Configs>();
-
     private static Configs worldConfigs;
-    private static TIntObjectHashMap<Configs> worldPerDimConfigs = new TIntObjectHashMap<Configs>();
+    private static final TIntObjectHashMap<Configs> PER_DIM_CONFIGS_GLOBAL = new TIntObjectHashMap<Configs>();
+    private static final TIntObjectHashMap<Configs> PER_DIM_CONFIGS_WORLD = new TIntObjectHashMap<Configs>();
 
     private static File globalConfigDir;
     private static File globalConfigFile;
@@ -89,12 +90,13 @@ public class Configs
     {
         globalConfigDir = new File(modConfigDir, Reference.MOD_ID);
         globalConfigFile = new File(globalConfigDir, Reference.MOD_ID + ".cfg");
-        globalConfigs = new Configs(globalConfigFile, true).loadConfigs();
+        globalConfigs = new Configs(globalConfigFile, true);
     }
 
     private static void setWorldDir()
     {
         File worldDir = DimensionManager.getCurrentSaveRootDirectory();
+
         if (worldDir != null)
         {
             worldConfigDir = new File(worldDir, Reference.MOD_ID);
@@ -131,13 +133,13 @@ public class Configs
 
     private static void loadPerDimensionConfigs()
     {
-        globalPerDimConfigs.clear();
+        PER_DIM_CONFIGS_GLOBAL.clear();
 
         Configs mainConfig = globalConfigs;
 
         for (int dimension : mainConfig.enabledInDimensions)
         {
-            Configs conf = globalPerDimConfigs.get(dimension);
+            Configs conf = PER_DIM_CONFIGS_GLOBAL.get(dimension);
 
             if (conf == null)
             {
@@ -145,12 +147,12 @@ public class Configs
 
                 if (file.exists() && file.isFile())
                 {
-                    globalPerDimConfigs.put(dimension, new Configs(globalConfigDir, dimension).copyFrom(mainConfig).loadConfigs());
+                    PER_DIM_CONFIGS_GLOBAL.put(dimension, new Configs(globalConfigDir, dimension).copyFrom(mainConfig).loadConfigs());
                 }
             }
         }
 
-        worldPerDimConfigs.clear();
+        PER_DIM_CONFIGS_WORLD.clear();
 
         if (worldConfigDir == null)
         {
@@ -161,7 +163,7 @@ public class Configs
 
         for (int dimension : mainConfig.enabledInDimensions)
         {
-            Configs conf = worldPerDimConfigs.get(dimension);
+            Configs conf = PER_DIM_CONFIGS_WORLD.get(dimension);
 
             if (conf == null)
             {
@@ -169,7 +171,7 @@ public class Configs
 
                 if (file.exists() && file.isFile())
                 {
-                    worldPerDimConfigs.put(dimension, new Configs(worldConfigDir, dimension).copyFrom(mainConfig).loadConfigs());
+                    PER_DIM_CONFIGS_WORLD.put(dimension, new Configs(worldConfigDir, dimension).copyFrom(mainConfig).loadConfigs());
                 }
             }
         }
@@ -177,14 +179,14 @@ public class Configs
 
     public static Configs getConfig(int dimension)
     {
-        Configs conf = worldPerDimConfigs.get(dimension);
+        Configs conf = PER_DIM_CONFIGS_WORLD.get(dimension);
 
         if (conf != null)
         {
             return conf;
         }
 
-        conf = globalPerDimConfigs.get(dimension);
+        conf = PER_DIM_CONFIGS_GLOBAL.get(dimension);
         return conf != null ? conf : getEffectiveMainConfig();
     }
 
@@ -256,8 +258,7 @@ public class Configs
 
         prop = conf.get(category, "useSingleTemplateImage", this.useSingleTemplateImage);
         prop.setComment("true = Use only one image template (biomes.png).\n" +
-                        "false = Use multiple image templates for different regions of the world\n" +
-                        "(one image per region file, ie. a 512x512 block area).");
+                        "false = Use multiple image templates for different regions of the world (one image per region file, ie. a 512x512 block area).");
         this.useSingleTemplateImage = prop.getBoolean();
 
         prop = conf.get(category, "useTemplateRandomFlipping", this.useTemplateRandomFlipping);
@@ -345,38 +346,56 @@ public class Configs
     private void readColorToBiomeMappings(Configuration conf)
     {
         ConfigCategory configCategory = conf.getCategory("ColorToBiomeMappings");
-        configCategory.setComment("Mappings from biome name to the RGB color value. These are now always used! Specified as hex values, without the leading '0x'.");
+        configCategory.setComment(  "Mappings from biome's registry name to the RGB color value.\n" +
+                                    "Specified as hex values, without the leading '0x'.\n" +
+                                    "To find out the biome registry names, you can use for example:\n" +
+                                    "1) The TellMe mod (the command '/tellme dump biomes' will write them to a file in config/tellme/)\n" +
+                                    "2) The mod MiniHUD (version 0.10.0 or later) to see the registry name of the biome you are currently in");
 
         ColorToBiomeMapping colorToBiomeMapping = new ColorToBiomeMapping();
 
-        // Iterate over the biome array and add a color-to-biome mapping for all of them
-        Iterator<Biome> iterator = Biome.REGISTRY.iterator();
-
-        while (iterator.hasNext())
+        // Iterate over the biome registry and add a color-to-biome mapping for all biomes
+        for (Map.Entry<ResourceLocation, Biome> entry : ForgeRegistries.BIOMES.getEntries())
         {
-            Biome biome = iterator.next();
+            Biome biome = entry.getValue();
 
             if (biome == null)
             {
                 continue;
             }
 
+            String registryName = entry.getKey().toString();
+            String displayName = biome.getBiomeName();
+            Property prop = null;
+            int biomeId = Biome.getIdForBiome(biome);
+
             // Default mapping is from the Biome ID to the red channel
-            int color = (Biome.getIdForBiome(biome) & 0xFF) << 16;
-            Property prop;
+            int color = (biomeId & 0xFF) << 16;
 
-            // Mapping found in the config, use that color value
-            if (configCategory.containsKey(biome.getBiomeName()))
+            // Mapping found in the config by the biome's registry name
+            if (configCategory.containsKey(registryName))
             {
-                prop = configCategory.get(biome.getBiomeName());
+                prop = configCategory.get(registryName);
+                configCategory.remove(displayName);
+            }
+            // Mapping found in the config by the biome's display name
+            else if (configCategory.containsKey(displayName))
+            {
+                // Convert the old display name entry into a registry name entry, and remove the old entry
+                prop = new Property(registryName, configCategory.get(displayName).getString(), Property.Type.STRING);
+                configCategory.remove(displayName);
+                configCategory.put(registryName, prop);
+            }
 
+            if (prop != null)
+            {
                 try
                 {
                     color = Integer.parseInt(prop.getString(), 16);
                 }
                 catch (NumberFormatException e)
                 {
-                    PaintedBiomes.logger.warn("Failed to parse color value '{}' for biome '{}'", prop.getString(), biome.getBiomeName());
+                    PaintedBiomes.logger.warn("Failed to parse color value '{}' for biome '{}'", prop.getString(), displayName);
                 }
             }
             // No mapping found in the config, add a default mapping, so that all the existing biomes will get added to the config
@@ -385,7 +404,7 @@ public class Configs
                 if (this.useCustomColorMappings)
                 {
                     // Try to get the default custom color, if one is defined for this biome
-                    Integer colorInteger = DefaultColorMappings.getColorForBiome(biome.getBiomeName());
+                    Integer colorInteger = DefaultColorMappings.getColorForBiome(registryName);
 
                     if (colorInteger != null)
                     {
@@ -393,8 +412,8 @@ public class Configs
                     }
                 }
 
-                prop = new Property(biome.getBiomeName(), String.format("%06X", color), Property.Type.STRING);
-                configCategory.put(biome.getBiomeName(), prop);
+                prop = new Property(registryName, String.format("%06X", color), Property.Type.STRING);
+                configCategory.put(registryName, prop);
             }
 
             int oldId = colorToBiomeMapping.getBiomeIDForColor(color);
@@ -402,39 +421,31 @@ public class Configs
             // The color is already in use, print a warning
             if (oldId != -1)
             {
-                Biome oldBiome = null;
-                Iterator<Biome> iteratorTmp = Biome.REGISTRY.iterator();
+                PaintedBiomes.logger.warn("**** WARNING **** WARNING **** WARNING ****");
+                PaintedBiomes.logger.warn(String.format("The color %06X (%d), attempted to use for biome '%s' (%s), ID: %d, is already in use!",
+                        color, color, registryName, displayName, biomeId));
+                PaintedBiomes.logger.warn("The biomes using that color are:");
 
-                while (iteratorTmp.hasNext())
+                for (Biome biomeTmp : ForgeRegistries.BIOMES.getValues())
                 {
-                    Biome biomeTmp = iteratorTmp.next();
-
                     if (biomeTmp != null && Biome.getIdForBiome(biomeTmp) == oldId)
                     {
-                        oldBiome = biomeTmp;
-                        break;
+                        PaintedBiomes.logger.warn("Biome: '{}' ({}), ID: {}", biomeTmp.getRegistryName(), biomeTmp.getBiomeName(), oldId);
                     }
                 }
 
-                String biomeName = oldBiome != null ? oldBiome.getBiomeName() : "ERROR PERROR PUERTO RICO!!";
-
-                PaintedBiomes.logger.warn("**** WARNING **** WARNING **** WARNING ****");
-                PaintedBiomes.logger.warn(String.format("The color %06X (%d) (attempted to use for biome '%s', ID: %d) is already in use!",
-                        color, color, biome.getBiomeName(), Biome.getIdForBiome(biome)));
-                PaintedBiomes.logger.warn("The biome already using it is '{}', ID {}", biomeName, oldId);
-                PaintedBiomes.logger.warn("This new color mapping HAS NOT been added to the active mappings. " +
-                                          "Please fix this conflict in the configuration file!");
+                PaintedBiomes.logger.warn("This new color mapping HAS NOT been added to the active mappings.");
+                PaintedBiomes.logger.warn("Please fix this conflict in the configuration file!");
                 PaintedBiomes.logger.warn("-------------------------------------------");
             }
             else
             {
                 // For simplicity, when generating terrain, the biome is always read from the mapping, even in case of a red channel mapping.
                 // So basically we want to always add all the existing biomes to the color-to-biome map.
-                colorToBiomeMapping.addMapping(color, Biome.getIdForBiome(biome));
+                colorToBiomeMapping.addMapping(color, biomeId);
             }
 
-            // Update the comment, in case the biome ID has been changed since the config was first generated
-            prop.setComment("Biome name: " + biome.getBiomeName() + ", Biome ID: " + Biome.getIdForBiome(biome) + " (Color as int: " + color + ")");
+            prop.setComment(String.format("Biome: %s (name: %s), ID: %d (Color as int: %d)", registryName, displayName, biomeId, color));
         }
     }
 
