@@ -88,5 +88,5 @@ processResources
     }
 
     // Move access transformers to META-INF
-    //rename '(' + config.mod_id + '_at.cfg)', 'META-INF/$1'
+    //rename '(.+_at.cfg)', 'META-INF/$1'
 }

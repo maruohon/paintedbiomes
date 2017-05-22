@@ -18,13 +18,13 @@ import fi.dy.masa.paintedbiomes.image.ImageHandler;
 public class BiomeProviderPaintedBiomes extends BiomeProvider
 {
     protected BiomeCache biomeCache;
-    protected BiomeProvider biomeProviderParent;
+    protected BiomeProvider parent;
     protected ImageHandler imageHandler;
 
     public BiomeProviderPaintedBiomes(World world, BiomeProvider biomeProviderParent, ImageHandler imageHandler)
     {
         super(world.getWorldInfo());
-        this.biomeProviderParent = biomeProviderParent;
+        this.parent = biomeProviderParent;
         this.imageHandler = imageHandler;
         this.biomeCache = new BiomeCache(this);
     }
@@ -32,7 +32,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     @Override
     public List<Biome> getBiomesToSpawnIn()
     {
-        return this.biomeProviderParent.getBiomesToSpawnIn();
+        return this.parent.getBiomesToSpawnIn();
     }
 
     @Override
@@ -51,6 +51,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     public Biome[] getBiomesForGeneration(Biome[] biomes, int scaledX, int scaledZ, int width, int height)
     {
         int size = width * height;
+
         if (biomes == null || biomes.length < size)
         {
             biomes = new Biome[size];
@@ -59,8 +60,8 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
         int endX = scaledX + width;
         int endZ = scaledZ + height;
 
-        // Get the biomes from the regular WorldChunkManager for this dimension
-        biomes = this.biomeProviderParent.getBiomesForGeneration(biomes, scaledX, scaledZ, width, height);
+        // Get the biomes from the parent BiomeProvider first, then override with the custom biomes where applicable
+        biomes = this.parent.getBiomesForGeneration(biomes, scaledX, scaledZ, width, height);
 
         try
         {
@@ -97,13 +98,14 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     public Biome[] getBiomes(Biome[] biomes, int x, int z, int width, int length, boolean cacheFlag)
     {
         int size = width * length;
+
         if (biomes == null || biomes.length < size)
         {
             biomes = new Biome[size];
         }
 
         // Get cached biomes
-        if (cacheFlag == true && width == 16 && length == 16 && (x & 0xF) == 0 && (z & 0xF) == 0)
+        if (cacheFlag && width == 16 && length == 16 && (x & 0xF) == 0 && (z & 0xF) == 0)
         {
             Biome[] bgb = this.biomeCache.getCachedBiomes(x, z);
             System.arraycopy(bgb, 0, biomes, 0, size);
@@ -111,8 +113,8 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
         }
         else
         {
-            // Get the biomes from the regular WorldChunkManager for this dimension
-            biomes = this.biomeProviderParent.getBiomes(biomes, x, z, width, length, cacheFlag);
+            // Get the biomes from the parent BiomeProvider first, then override with the custom biomes where applicable
+            biomes = this.parent.getBiomes(biomes, x, z, width, length, cacheFlag);
 
             int endX = x + width;
             int endZ = z + length;
@@ -158,7 +160,7 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     @Override
     public float getTemperatureAtHeight(float p_76939_1_, int p_76939_2_)
     {
-        return this.biomeProviderParent.getTemperatureAtHeight(p_76939_1_, p_76939_2_);
+        return this.parent.getTemperatureAtHeight(p_76939_1_, p_76939_2_);
     }
 
     @Override

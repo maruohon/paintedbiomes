@@ -44,7 +44,7 @@ public class ImageCache
         long currentTime = System.currentTimeMillis();
         Iterator<Entry<RegionCoords, Long>> iter = this.timeouts.entrySet().iterator();
 
-        while (iter.hasNext() == true)
+        while (iter.hasNext())
         {
             Entry<RegionCoords, Long> entry = iter.next();
 

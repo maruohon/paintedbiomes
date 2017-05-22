@@ -1,14 +1,13 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
-
 import fi.dy.masa.paintedbiomes.config.Configs;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class ImageHandler implements IImageReader
 {
-    private static final TIntObjectHashMap<ImageHandler> imageHandlers = new TIntObjectHashMap<ImageHandler>();
+    private static final TIntObjectHashMap<ImageHandler> HANDLERS = new TIntObjectHashMap<ImageHandler>();
     private ImageCache regionImageCache;
     private ImageSingle singleImage;
 
@@ -27,11 +26,12 @@ public class ImageHandler implements IImageReader
 
     public static ImageHandler getImageHandler(int dimension)
     {
-        ImageHandler imageHandler = imageHandlers.get(dimension);
+        ImageHandler imageHandler = HANDLERS.get(dimension);
+
         if (imageHandler == null)
         {
             imageHandler = new ImageHandler(dimension);
-            imageHandlers.put(dimension, imageHandler);
+            HANDLERS.put(dimension, imageHandler);
         }
 
         return imageHandler;
@@ -39,7 +39,7 @@ public class ImageHandler implements IImageReader
 
     public static void removeImageHandler(int dimension)
     {
-        imageHandlers.remove(dimension);
+        HANDLERS.remove(dimension);
     }
 
     public static void setTemplateBasePaths(File pathGlobal, File pathWorld)
@@ -79,7 +79,7 @@ public class ImageHandler implements IImageReader
             this.regionImageCache = new ImageCache(seed, this.templatePath);
         }
         // Single template image mode, with some type of template repeating
-        else if (configs.useTemplateRepeating == true)
+        else if (configs.useTemplateRepeating)
         {
             this.singleImage = new ImageSingleRepeating(this.dimension, seed, this.templatePath);
             this.singleImage.init();
@@ -98,13 +98,13 @@ public class ImageHandler implements IImageReader
 
     public static void tickTimeouts()
     {
-        if (++timer >= 20)
+        if (++timer >= 200)
         {
             timer = 0;
-            int threshold = 300; // 5 minute timeout for non-accessed images
-            TIntObjectIterator<ImageHandler> iterator = imageHandlers.iterator();
+            int threshold = 30; // 5 minute timeout for non-accessed images
+            TIntObjectIterator<ImageHandler> iterator = HANDLERS.iterator();
 
-            for (int i = imageHandlers.size(); i > 0; --i)
+            for (int i = HANDLERS.size(); i > 0; --i)
             {
                 iterator.advance();
                 ImageHandler imageHandler = iterator.value();
@@ -120,7 +120,7 @@ public class ImageHandler implements IImageReader
     @Override
     public boolean isBiomeDefinedAt(int blockX, int blockZ)
     {
-        if (this.useSingleTemplateImage == true)
+        if (this.useSingleTemplateImage)
         {
             return this.singleImage.isBiomeDefinedAt(blockX, blockZ);
         }
@@ -131,7 +131,7 @@ public class ImageHandler implements IImageReader
     @Override
     public int getBiomeIDAt(int blockX, int blockZ, int defaultBiomeID)
     {
-        if (this.useSingleTemplateImage == true)
+        if (this.useSingleTemplateImage)
         {
             return this.singleImage.getBiomeIDAt(blockX, blockZ, defaultBiomeID);
         }

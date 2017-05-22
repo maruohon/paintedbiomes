@@ -2,7 +2,6 @@ package fi.dy.masa.paintedbiomes.image;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
@@ -102,7 +101,7 @@ public class ImageSingleRepeating extends ImageSingle
         }
 
         // non-square template image while random template rotation is enabled...
-        if (this.useTemplateRotation == true && this.areaSizeX != this.areaSizeZ)
+        if (this.useTemplateRotation && this.areaSizeX != this.areaSizeZ)
         {
             PaintedBiomes.logger.warn("*** WARNING: Template random rotations enabled, but the template image is not square!" +
                                       " Clipping the template to a square!");

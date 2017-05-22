@@ -5,15 +5,13 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
-
 import javax.imageio.ImageIO;
-
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
 public abstract class ImageBase implements IImageReader
 {
-    protected static final Random rand = new Random();
+    protected static final Random RAND = new Random();
     protected final long randLong1;
     protected final long randLong2;
 
@@ -50,29 +48,29 @@ public abstract class ImageBase implements IImageReader
         this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
         this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
 
-        rand.setSeed(this.worldSeed);
-        this.randLong1 = rand.nextLong() / 2L * 2L + 1L;
-        this.randLong2 = rand.nextLong() / 2L * 2L + 1L;
+        RAND.setSeed(this.worldSeed);
+        this.randLong1 = RAND.nextLong() / 2L * 2L + 1L;
+        this.randLong2 = RAND.nextLong() / 2L * 2L + 1L;
     }
 
     protected BufferedImage readImageData(File templateFile)
     {
         try
         {
-            if (templateFile.exists() == true)
+            if (templateFile.exists())
             {
                 BufferedImage image = ImageIO.read(templateFile);
 
                 if (image != null)
                 {
-                    PaintedBiomes.logger.info("Successfully read template image from '" + templateFile.getAbsolutePath() + "'");
+                    PaintedBiomes.logger.info("Successfully read template image from '{}'", templateFile.getAbsolutePath());
                     return image;
                 }
             }
         }
         catch (IOException e)
         {
-            PaintedBiomes.logger.warn("Failed to read template image from '" + templateFile.getAbsolutePath() + "'");
+            PaintedBiomes.logger.warn("Failed to read template image from '{}'", templateFile.getAbsolutePath());
         }
 
         return null;
@@ -105,16 +103,16 @@ public abstract class ImageBase implements IImageReader
 
     protected void setTemplateTransformations(long posX, long posZ)
     {
-        rand.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
+        RAND.setSeed(posX * this.randLong1 + posZ * this.randLong2 ^ this.worldSeed);
 
-        int r = rand.nextInt(4);
-        this.templateRotation = this.useTemplateRotation == true ? r : 0;
+        int r = RAND.nextInt(4);
+        this.templateRotation = this.useTemplateRotation ? r : 0;
 
-        r = rand.nextInt(4); // 0x1 = flip image X, 0x2 = flip image Y => 0..3
+        r = RAND.nextInt(4); // 0x1 = flip image X, 0x2 = flip image Y => 0..3
         this.templateFlip = this.useTemplateFlipping ? r : 0;
 
-        r = rand.nextInt(this.maxAlternateTemplates + 1);
-        this.alternateTemplate = this.useAlternateTemplates == true ? r : 0;
+        r = RAND.nextInt(this.maxAlternateTemplates + 1);
+        this.alternateTemplate = this.useAlternateTemplates ? r : 0;
     }
 
     protected int getUnpaintedAreaBiomeID(int defaultBiomeID)
@@ -196,6 +194,7 @@ public abstract class ImageBase implements IImageReader
         try
         {
             WritableRaster raster = this.imageData.getAlphaRaster();
+
             if (raster != null)
             {
                 raster.getPixel(imageX, imageY, alpha);
@@ -207,8 +206,8 @@ public abstract class ImageBase implements IImageReader
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
-            PaintedBiomes.logger.fatal("getImageAlphaAt(): Error reading the alpha channel of the template image; imageX: " +
-                                        imageX + " imageY: " + imageY);
+            PaintedBiomes.logger.error("getImageAlphaAt(): Error reading the alpha channel of the template image;\n" +
+                                       "imageX: {} imageY: {}", imageX, imageY);
         }
 
         return alpha[0];

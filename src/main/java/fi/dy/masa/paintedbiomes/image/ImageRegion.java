@@ -1,13 +1,10 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
-import java.util.Random;
-
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 
 public class ImageRegion extends ImageBase implements IImageReader
 {
-    protected static final Random rand = new Random();
     protected final String name;
     protected final int regionX;
     protected final int regionZ;
@@ -28,10 +25,11 @@ public class ImageRegion extends ImageBase implements IImageReader
     {
         File templateFile = new File(templatePath, this.name + ".png");
 
-        if (this.useAlternateTemplates == true)
+        if (this.useAlternateTemplates)
         {
             File tmpFile = new File(templatePath, this.name + "_alt_" + (this.alternateTemplate + 1) + ".png");
-            if (tmpFile.exists() == true)
+
+            if (tmpFile.exists() && tmpFile.isFile())
             {
                 templateFile = tmpFile;
             }
@@ -47,7 +45,7 @@ public class ImageRegion extends ImageBase implements IImageReader
         super.setTemplateDimensions();
 
         // non-square template image while random template rotation is enabled...
-        if (this.useTemplateRotation == true && this.areaSizeX != this.areaSizeZ)
+        if (this.useTemplateRotation && this.areaSizeX != this.areaSizeZ)
         {
             String str = String.format("*** WARNING: Template random rotations enabled, but the template image for " +
                     "region r.%d.%d is not square! Clipping the template to a square!", this.regionX, this.regionZ);
