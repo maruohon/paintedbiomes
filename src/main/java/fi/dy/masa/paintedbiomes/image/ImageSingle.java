@@ -1,7 +1,6 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
-
 import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle extends ImageBase implements IImageReader
@@ -37,10 +36,11 @@ public class ImageSingle extends ImageBase implements IImageReader
     {
         File templateFile = new File(templatePath, "biomes.png");
 
-        if (this.useAlternateTemplates == true)
+        if (this.useAlternateTemplates)
         {
             File tmpFile = new File(templatePath, "biomes_alt_" + (this.alternateTemplate + 1) + ".png");
-            if (tmpFile.exists() == true)
+
+            if (tmpFile.exists() && tmpFile.isFile())
             {
                 templateFile = tmpFile;
             }

@@ -10,12 +10,6 @@ import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderHell;
 import net.minecraft.world.gen.ChunkProviderOverworld;
 import net.minecraft.world.gen.ChunkProviderServer;
-import fi.dy.masa.paintedbiomes.PaintedBiomes;
-import fi.dy.masa.paintedbiomes.config.Configs;
-import fi.dy.masa.paintedbiomes.image.ImageHandler;
-import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
-import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
-import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -23,6 +17,12 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.ReflectionHelper.UnableToAccessFieldException;
+import fi.dy.masa.paintedbiomes.PaintedBiomes;
+import fi.dy.masa.paintedbiomes.config.Configs;
+import fi.dy.masa.paintedbiomes.image.ImageHandler;
+import fi.dy.masa.paintedbiomes.world.BiomeProviderPaintedBiomes;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeGeneration;
+import fi.dy.masa.paintedbiomes.world.GenLayerBiomeIndex;
 
 public class PaintedBiomesEventHandler
 {
@@ -39,7 +39,7 @@ public class PaintedBiomesEventHandler
     public void onWorldLoad(WorldEvent.Load event)
     {
         overrideChunkProvider(event.getWorld());
-        overrideWorldChunkManager(event.getWorld());
+        overrideBiomeProvider(event.getWorld());
     }
 
     @SubscribeEvent
@@ -49,7 +49,7 @@ public class PaintedBiomesEventHandler
         // need this event to cover that case. Otherwise a newly created world (no existing level.dat file yet)
         // will have a mess of regular terrain generation chunks near the spawn chunk...
         overrideChunkProvider(event.getWorld());
-        overrideWorldChunkManager(event.getWorld());
+        overrideBiomeProvider(event.getWorld());
     }
 
     @SubscribeEvent
@@ -64,47 +64,44 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onInitBiomeGen(WorldTypeEvent.InitBiomeGens event)
     {
-        if (Configs.getEffectiveMainConfig().useGenLayer == false)
+        if (Configs.getEffectiveMainConfig().useGenLayer)
         {
-            return;
+            PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
+            ImageHandler.getImageHandler(0).init(event.getSeed());
+            event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(), event.getOriginalBiomeGens()[0], event.getWorldType(), "");
+            event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(), event.getOriginalBiomeGens()[1], event.getWorldType(), "");
+            event.getNewBiomeGens()[2] = event.getNewBiomeGens()[0];
         }
-
-        PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
-        ImageHandler.getImageHandler(0).init(event.getSeed());
-        event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(), event.getOriginalBiomeGens()[0], event.getWorldType(), "");
-        event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(), event.getOriginalBiomeGens()[1], event.getWorldType(), "");
-        event.getNewBiomeGens()[2] = event.getNewBiomeGens()[0];
     }
 
-    private static void overrideWorldChunkManager(World world)
+    private static void overrideBiomeProvider(World world)
     {
-        // Not used when using a GenLayer override, and don't accidentally re-wrap our own WorldChunkManager...
-        if (world.isRemote == true || Configs.getEffectiveMainConfig().useGenLayer == true)
+        // Not used when using a GenLayer override
+        if (world.isRemote == false && Configs.getEffectiveMainConfig().useGenLayer == false)
         {
-            return;
-        }
+            int dimension = world.provider.getDimension();
 
-        int dimension = world.provider.getDimension();
-
-        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
-        {
-            if (dimension == i)
+            for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
             {
-                overrideBiomeProvider(dimension, world);
-                break;
+                if (dimension == i)
+                {
+                    overrideBiomeProvider(dimension, world);
+                    break;
+                }
             }
         }
     }
 
     private static void overrideBiomeProvider(int dimension, World world)
     {
+        // Don't accidentally re-wrap our own BiomeProvider...
         if (world.getBiomeProvider() instanceof BiomeProviderPaintedBiomes)
         {
             return;
         }
 
-        PaintedBiomes.logger.info(String.format("Wrapping the BiomeProvider (of type %s) of dimension %d with %s",
-                world.getBiomeProvider().getClass().getName(), dimension, BiomeProviderPaintedBiomes.class.getName()));
+        PaintedBiomes.logger.info("Wrapping the BiomeProvider (of type {}) of dimension {} with {}",
+                world.getBiomeProvider().getClass().getName(), dimension, BiomeProviderPaintedBiomes.class.getName());
 
         try
         {
@@ -122,19 +119,17 @@ public class PaintedBiomesEventHandler
 
     private static void overrideChunkProvider(World world)
     {
-        if (world.isRemote == true)
+        if (world.isRemote == false)
         {
-            return;
-        }
+            int dimension = world.provider.getDimension();
 
-        int dimension = world.provider.getDimension();
-
-        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
-        {
-            if (dimension == i)
+            for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
             {
-                overrideChunkProvider(dimension, world);
-                break;
+                if (dimension == i)
+                {
+                    overrideChunkProvider(dimension, world);
+                    break;
+                }
             }
         }
     }
@@ -142,26 +137,30 @@ public class PaintedBiomesEventHandler
     private static void overrideChunkProvider(int dimension, World world)
     {
         Configs conf = Configs.getConfig(dimension);
-        if (conf.overrideChunkProvider == true && world instanceof WorldServer)
+
+        if (conf.overrideChunkProvider && world instanceof WorldServer)
         {
             IChunkGenerator newChunkProvider = getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
+
             if (newChunkProvider == null)
             {
-                PaintedBiomes.logger.warn("Invalid/unknown ChunkProvider type '" + conf.chunkProviderType + "'.");
+                PaintedBiomes.logger.warn("Invalid/unknown ChunkProvider type '{}'", conf.chunkProviderType);
                 return;
             }
 
-            PaintedBiomes.logger.info(String.format("Attempting to override the ChunkProvider (of type %s) of dimension %d with %s",
-                    ((ChunkProviderServer)world.getChunkProvider()).chunkGenerator.getClass().getName(), dimension, newChunkProvider.getClass().getName()));
+            PaintedBiomes.logger.info("Attempting to override the ChunkProvider (of type {}) of dimension {} with {}",
+                    ((ChunkProviderServer)world.getChunkProvider()).chunkGenerator.getClass().getName(),
+                    dimension, newChunkProvider.getClass().getName());
 
             try
             {
-                ReflectionHelper.setPrivateValue(ChunkProviderServer.class, (ChunkProviderServer)world.getChunkProvider(), newChunkProvider, "field_186029_c", "chunkGenerator");
+                ReflectionHelper.setPrivateValue(ChunkProviderServer.class, (ChunkProviderServer)world.getChunkProvider(),
+                        newChunkProvider, "field_186029_c", "chunkGenerator");
             }
             catch (UnableToAccessFieldException e)
             {
-                PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension " + dimension + " with " + newChunkProvider.getClass().getName());
-                PaintedBiomes.logger.warn("" + e.getMessage());
+                PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension {} with {}",
+                        dimension, newChunkProvider.getClass().getName(), e);
             }
         }
     }
