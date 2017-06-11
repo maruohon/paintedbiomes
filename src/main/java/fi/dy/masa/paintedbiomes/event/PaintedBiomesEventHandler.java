@@ -5,13 +5,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeProvider;
-import net.minecraft.world.chunk.IChunkGenerator;
-import net.minecraft.world.gen.ChunkProviderEnd;
-import net.minecraft.world.gen.ChunkProviderFlat;
-import net.minecraft.world.gen.ChunkProviderHell;
-import net.minecraft.world.gen.ChunkProviderOverworld;
+import net.minecraft.world.gen.ChunkGeneratorEnd;
+import net.minecraft.world.gen.ChunkGeneratorFlat;
+import net.minecraft.world.gen.ChunkGeneratorHell;
+import net.minecraft.world.gen.ChunkGeneratorOverworld;
+import net.minecraft.world.gen.ChunkGeneratorSettings;
 import net.minecraft.world.gen.ChunkProviderServer;
-import net.minecraft.world.gen.ChunkProviderSettings;
+import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -72,9 +72,9 @@ public class PaintedBiomesEventHandler
             ImageHandler.getImageHandler(0).init(event.getSeed());
 
             event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(),
-                    event.getOriginalBiomeGens()[0], event.getWorldType(), ChunkProviderSettings.Factory.jsonToFactory("").build());
+                    event.getOriginalBiomeGens()[0], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
             event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(),
-                    event.getOriginalBiomeGens()[1], event.getWorldType(), ChunkProviderSettings.Factory.jsonToFactory("").build());
+                    event.getOriginalBiomeGens()[1], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
             event.getNewBiomeGens()[2] = event.getNewBiomeGens()[0];
         }
     }
@@ -174,19 +174,19 @@ public class PaintedBiomesEventHandler
     {
         if (chunkProviderType.equals("VANILLA_DEFAULT"))
         {
-            return new ChunkProviderOverworld(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
+            return new ChunkGeneratorOverworld(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
         }
         else if (chunkProviderType.equals("VANILLA_FLAT"))
         {
-            return new ChunkProviderFlat(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
+            return new ChunkGeneratorFlat(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
         }
         else if (chunkProviderType.equals("VANILLA_HELL"))
         {
-            return new ChunkProviderHell(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed());
+            return new ChunkGeneratorHell(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed());
         }
         else if (chunkProviderType.equals("VANILLA_END"))
         {
-            return new ChunkProviderEnd(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed(), new BlockPos(100, 50, 0));
+            return new ChunkGeneratorEnd(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed(), new BlockPos(100, 50, 0));
         }
 
         return null;

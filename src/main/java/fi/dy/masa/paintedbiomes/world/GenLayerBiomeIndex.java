@@ -1,14 +1,14 @@
 package fi.dy.masa.paintedbiomes.world;
 
 import net.minecraft.world.WorldType;
-import net.minecraft.world.gen.ChunkProviderSettings;
+import net.minecraft.world.gen.ChunkGeneratorSettings;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.GenLayerBiome;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
 public class GenLayerBiomeIndex extends GenLayerBiome
 {
-    public GenLayerBiomeIndex(long seed, GenLayer parent, WorldType worldType, ChunkProviderSettings chunkProviderSettings)
+    public GenLayerBiomeIndex(long seed, GenLayer parent, WorldType worldType, ChunkGeneratorSettings chunkProviderSettings)
     {
         super(seed, parent, worldType, chunkProviderSettings);
     }
