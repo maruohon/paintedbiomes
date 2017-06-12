@@ -33,14 +33,14 @@ public class Configs
     public boolean useGenLayer;
     public int[] enabledInDimensions;
     public boolean overrideChunkProvider;
-    public String chunkProviderType;
-    public String chunkProviderOptions;
+    public String chunkProviderType = "";
+    public String chunkProviderOptions = "";
 
     public int templateAlignmentMode;
     public int templateAlignmentX;
     public int templateAlignmentZ;
-    public int templateUndefinedAreaBiome;
-    public int unpaintedAreaBiome;
+    public String templateUndefinedAreaBiomeName = "";
+    public String unpaintedAreaBiomeName = "";
     public boolean useSingleTemplateImage;
     private boolean useCustomColorMappings;
 
@@ -60,12 +60,8 @@ public class Configs
         this.configFile = configFile;
         this.isMaster = isMaster;
         this.enabledInDimensions = new int[0];
-        this.templateUndefinedAreaBiome = -1;
-        this.unpaintedAreaBiome = -1;
         this.useSingleTemplateImage = true;
         this.useCustomColorMappings = true;
-        this.chunkProviderType = "";
-        this.chunkProviderOptions = "";
     }
 
     private Configs(File configDir, int dimension)
@@ -195,8 +191,8 @@ public class Configs
         this.templateAlignmentMode      = old.templateAlignmentMode;
         this.templateAlignmentX         = old.templateAlignmentX;
         this.templateAlignmentZ         = old.templateAlignmentZ;
-        this.templateUndefinedAreaBiome = old.templateUndefinedAreaBiome;
-        this.unpaintedAreaBiome         = old.unpaintedAreaBiome;
+        this.templateUndefinedAreaBiomeName = old.templateUndefinedAreaBiomeName;
+        this.unpaintedAreaBiomeName         = old.unpaintedAreaBiomeName;
         this.useSingleTemplateImage     = old.useSingleTemplateImage;
         this.useTemplateRepeating       = old.useTemplateRepeating;
         this.useTemplateRandomRotation  = old.useTemplateRandomRotation;
@@ -241,16 +237,17 @@ public class Configs
         prop.setComment("The world Z coordinate where the selected point (templateAlignmentMode) of the template image is aligned.");
         this.templateAlignmentZ = prop.getInt();
 
-        prop = conf.get(category, "templateUndefinedAreaBiomeID", this.templateUndefinedAreaBiome);
+        prop = conf.get(category, "templateUndefinedAreaBiome", this.templateUndefinedAreaBiomeName);
         prop.setComment("How to handle \"undefined\" (= completely transparent) areas within the template image area(s).\n" +
-                        "-1 = Use the biome from regular terrain generation, 0..255 = the biome ID to use.");
-        this.templateUndefinedAreaBiome = this.checkAndFixBiomeID("templateUndefinedAreaBiomeID", prop, -1);
+                        "<empty or invalid biome registry name name> = Use the biome from regular terrain generation\n" +
+                        "<a valid biome registry name> = the biome to use");
+        this.templateUndefinedAreaBiomeName = prop.getString();
 
-        prop = conf.get(category, "unpaintedAreaBiomeID", this.unpaintedAreaBiome);
+        prop = conf.get(category, "unpaintedAreaBiome", this.unpaintedAreaBiomeName);
         prop.setComment("Biome handling outside of the template image(s).\n" +
-                        "-1 = Use the biome from regular terrain generation\n" +
-                        "0..255 = the Biome ID to use.");
-        this.unpaintedAreaBiome = this.checkAndFixBiomeID("unpaintedAreaBiomeID", prop, -1);
+                        "<empty or invalid biome registry name name> = Use the biome from regular terrain generation\n" +
+                        "<a valid biome registry name> = the biome to use");
+        this.unpaintedAreaBiomeName = prop.getString();
 
         prop = conf.get(category, "useAlternateTemplates", this.useAlternateTemplates);
         prop.setComment("Enable using randomly selected alternate templates (based on the world seed and the relative location).");
@@ -461,21 +458,5 @@ public class Configs
         }
 
         return value;
-    }
-
-    private int checkAndFixBiomeID(String configName, Property prop, int defaultBiomeId)
-    {
-        // FIXME Hard coded max biome id...
-        int biomeId = this.checkAndFixConfigValueInt(configName, prop, -1, 255, defaultBiomeId);
-
-        if (biomeId >= 0 && Biome.getBiomeForId(biomeId) == null)
-        {
-            PaintedBiomes.logger.warn("Invalid/non-existing Biome ID '{}' for config '{}', setting the value to '{}'",
-                    biomeId, configName, defaultBiomeId);
-            biomeId = defaultBiomeId;
-            prop.set(biomeId);
-        }
-
-        return biomeId;
     }
 }

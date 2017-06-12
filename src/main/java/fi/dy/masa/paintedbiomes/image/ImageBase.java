@@ -6,6 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 import javax.imageio.ImageIO;
+import org.apache.commons.lang3.StringUtils;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
@@ -45,12 +49,23 @@ public abstract class ImageBase implements IImageReader
         this.useTemplateFlipping = conf.useTemplateRandomFlipping;
         this.useTemplateRotation = conf.useTemplateRandomRotation;
         this.maxAlternateTemplates = conf.maxAlternateTemplates;
-        this.unpaintedAreaBiomeID = conf.unpaintedAreaBiome;
-        this.templateUndefinedAreaBiomeID = conf.templateUndefinedAreaBiome;
+        this.unpaintedAreaBiomeID = getBiomeIDForRegistryName(conf.unpaintedAreaBiomeName);
+        this.templateUndefinedAreaBiomeID = getBiomeIDForRegistryName(conf.templateUndefinedAreaBiomeName);
 
         RAND.setSeed(this.worldSeed);
         this.randLong1 = RAND.nextLong() / 2L * 2L + 1L;
         this.randLong2 = RAND.nextLong() / 2L * 2L + 1L;
+    }
+
+    protected static int getBiomeIDForRegistryName(String regName)
+    {
+        if (StringUtils.isBlank(regName) == false)
+        {
+            Biome biome = ForgeRegistries.BIOMES.getValue(new ResourceLocation(regName));
+            return biome != null ? Biome.getIdForBiome(biome) : -1;
+        }
+
+        return -1;
     }
 
     protected BufferedImage readImageData(File templateFile)
