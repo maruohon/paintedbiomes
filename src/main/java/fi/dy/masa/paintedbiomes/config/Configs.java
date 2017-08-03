@@ -2,12 +2,14 @@ package fi.dy.masa.paintedbiomes.config;
 
 import java.io.File;
 import java.util.Map;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.common.DimensionManager;
+import net.minecraft.world.chunk.storage.AnvilSaveConverter;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
 import fi.dy.masa.paintedbiomes.image.ColorToBiomeMapping;
@@ -91,10 +93,11 @@ public class Configs
 
     private static void setWorldDir()
     {
-        File worldDir = DimensionManager.getCurrentSaveRootDirectory();
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 
-        if (worldDir != null)
+        if (server != null)
         {
+            File worldDir = new File(((AnvilSaveConverter) server.getActiveAnvilConverter()).savesDirectory, server.getFolderName());
             worldConfigDir = new File(worldDir, Reference.MOD_ID);
             worldConfigFile = new File(worldConfigDir, Reference.MOD_ID + ".cfg");
         }
@@ -239,13 +242,13 @@ public class Configs
 
         prop = conf.get(category, "templateUndefinedAreaBiome", this.templateUndefinedAreaBiomeName);
         prop.setComment("How to handle \"undefined\" (= completely transparent) areas within the template image area(s).\n" +
-                        "<empty or invalid biome registry name name> = Use the biome from regular terrain generation\n" +
+                        "<empty or invalid biome registry name> = Use the biome from regular terrain generation\n" +
                         "<a valid biome registry name> = the biome to use");
         this.templateUndefinedAreaBiomeName = prop.getString();
 
         prop = conf.get(category, "unpaintedAreaBiome", this.unpaintedAreaBiomeName);
         prop.setComment("Biome handling outside of the template image(s).\n" +
-                        "<empty or invalid biome registry name name> = Use the biome from regular terrain generation\n" +
+                        "<empty or invalid biome registry name> = Use the biome from regular terrain generation\n" +
                         "<a valid biome registry name> = the biome to use");
         this.unpaintedAreaBiomeName = prop.getString();
 
