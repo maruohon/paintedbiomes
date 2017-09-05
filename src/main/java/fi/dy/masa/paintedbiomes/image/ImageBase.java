@@ -78,7 +78,8 @@ public abstract class ImageBase implements IImageReader
 
                 if (image != null)
                 {
-                    PaintedBiomes.logger.info("Successfully read template image from '{}'", templateFile.getAbsolutePath());
+                    PaintedBiomes.logger.info("Successfully read template image from '{}' (dimensions: {}x{})",
+                            templateFile.getAbsolutePath(), image.getWidth(), image.getHeight());
                     return image;
                 }
             }
