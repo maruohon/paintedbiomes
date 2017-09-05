@@ -38,8 +38,11 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        overrideChunkProvider(event.getWorld());
-        overrideBiomeProvider(event.getWorld());
+        if (event.getWorld().isRemote == false)
+        {
+            this.overrideChunkProvider(event.getWorld());
+            this.overrideBiomeProvider(event.getWorld());
+        }
     }
 
     @SubscribeEvent
@@ -48,14 +51,17 @@ public class PaintedBiomesEventHandler
         // The initial world spawn position is created before the WorldEvent.Load fires, so we
         // need this event to cover that case. Otherwise a newly created world (no existing level.dat file yet)
         // will have a mess of regular terrain generation chunks near the spawn chunk...
-        overrideChunkProvider(event.getWorld());
-        overrideBiomeProvider(event.getWorld());
+        if (event.getWorld().isRemote == false)
+        {
+            this.overrideChunkProvider(event.getWorld());
+            this.overrideBiomeProvider(event.getWorld());
+        }
     }
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload event)
     {
-        if (Configs.getEffectiveMainConfig().useGenLayer == false)
+        if (event.getWorld().isRemote == false && Configs.getEffectiveMainConfig().useGenLayer == false)
         {
             ImageHandler.removeImageHandler(event.getWorld().provider.getDimension());
         }
@@ -74,10 +80,10 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    private static void overrideBiomeProvider(World world)
+    private void overrideBiomeProvider(World world)
     {
         // Not used when using a GenLayer override
-        if (world.isRemote == false && Configs.getEffectiveMainConfig().useGenLayer == false)
+        if (Configs.getEffectiveMainConfig().useGenLayer == false)
         {
             int dimension = world.provider.getDimension();
 
@@ -85,14 +91,14 @@ public class PaintedBiomesEventHandler
             {
                 if (dimension == i)
                 {
-                    overrideBiomeProvider(dimension, world);
+                    this.overrideBiomeProvider(dimension, world);
                     break;
                 }
             }
         }
     }
 
-    private static void overrideBiomeProvider(int dimension, World world)
+    private void overrideBiomeProvider(int dimension, World world)
     {
         // Don't accidentally re-wrap our own BiomeProvider...
         if (world.getBiomeProvider() instanceof BiomeProviderPaintedBiomes)
@@ -117,30 +123,27 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    private static void overrideChunkProvider(World world)
+    private void overrideChunkProvider(World world)
     {
-        if (world.isRemote == false)
-        {
-            int dimension = world.provider.getDimension();
+        int dimension = world.provider.getDimension();
 
-            for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
+        for (int i : Configs.getEffectiveMainConfig().enabledInDimensions)
+        {
+            if (dimension == i)
             {
-                if (dimension == i)
-                {
-                    overrideChunkProvider(dimension, world);
-                    break;
-                }
+                this.overrideChunkProvider(dimension, world);
+                break;
             }
         }
     }
 
-    private static void overrideChunkProvider(int dimension, World world)
+    private void overrideChunkProvider(int dimension, World world)
     {
         Configs conf = Configs.getConfig(dimension);
 
         if (conf.overrideChunkProvider && world instanceof WorldServer)
         {
-            IChunkGenerator newChunkProvider = getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
+            IChunkGenerator newChunkProvider = this.getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
 
             if (newChunkProvider == null)
             {
@@ -165,7 +168,7 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    private static IChunkGenerator getNewChunkProvider(World world, String chunkProviderType, String generatorOptions)
+    private IChunkGenerator getNewChunkProvider(World world, String chunkProviderType, String generatorOptions)
     {
         if (chunkProviderType.equals("VANILLA_DEFAULT"))
         {
