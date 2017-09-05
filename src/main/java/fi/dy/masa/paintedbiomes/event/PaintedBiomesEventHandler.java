@@ -8,10 +8,12 @@ import net.minecraft.world.gen.ChunkProviderFlat;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 import net.minecraft.world.gen.ChunkProviderHell;
 import net.minecraft.world.gen.ChunkProviderServer;
+import net.minecraft.world.gen.layer.GenLayer;
 
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.ServerTickEvent;
@@ -60,7 +62,7 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority=EventPriority.LOW)
     public void onInitBiomeGen(WorldTypeEvent.InitBiomeGens event)
     {
         if (Configs.getEffectiveMainConfig().useGenLayer == false)
@@ -70,9 +72,11 @@ public class PaintedBiomesEventHandler
 
         PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
         ImageHandler.getImageHandler(0).init(event.seed);
-        event.newBiomeGens[0] = new GenLayerBiomeGeneration(event.seed, event.originalBiomeGens[0], event.worldType);
-        event.newBiomeGens[1] = new GenLayerBiomeIndex(event.seed, event.originalBiomeGens[1], event.worldType);
-        event.newBiomeGens[2] = event.newBiomeGens[0];
+        GenLayer[] newGens = event.newBiomeGens.clone();
+        newGens[0] = new GenLayerBiomeGeneration(event.seed, newGens[0], event.worldType);
+        newGens[1] = new GenLayerBiomeIndex(event.seed, newGens[1], event.worldType);
+        newGens[2] = newGens[0];
+        event.newBiomeGens = newGens;
     }
 
     private static void overrideWorldChunkManager(World world)
