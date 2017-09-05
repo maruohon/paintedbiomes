@@ -42,9 +42,9 @@ public class BiomeProviderPaintedBiomes extends BiomeProvider
     }
 
     @Override
-    public Biome getBiome(BlockPos pos, Biome biomeGenBaseIn)
+    public Biome getBiome(BlockPos pos, Biome defaultBiome)
     {
-        return this.biomeCache.getBiome(pos.getX(), pos.getZ(), biomeGenBaseIn);
+        return this.biomeCache.getBiome(pos.getX(), pos.getZ(), defaultBiome);
     }
 
     @Override
