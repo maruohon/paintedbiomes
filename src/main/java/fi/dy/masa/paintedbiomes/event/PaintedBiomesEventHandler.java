@@ -81,7 +81,7 @@ public class PaintedBiomesEventHandler
             GenLayer[] newGens = event.getNewBiomeGens().clone();
             newGens[0] = new GenLayerBiomeGeneration(event.getSeed(), newGens[0], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
             newGens[1] = new GenLayerBiomeIndex(event.getSeed(), newGens[1], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
-            newGens[2] = event.getNewBiomeGens()[0];
+            newGens[2] = newGens[0];
             event.setNewBiomeGens(newGens);
         }
     }
