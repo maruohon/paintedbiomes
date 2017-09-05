@@ -12,8 +12,10 @@ import net.minecraft.world.gen.ChunkGeneratorOverworld;
 import net.minecraft.world.gen.ChunkGeneratorSettings;
 import net.minecraft.world.gen.ChunkProviderServer;
 import net.minecraft.world.gen.IChunkGenerator;
+import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
@@ -69,19 +71,18 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority=EventPriority.LOW)
     public void onInitBiomeGen(WorldTypeEvent.InitBiomeGens event)
     {
         if (Configs.getEffectiveMainConfig().useGenLayer)
         {
             PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
             ImageHandler.getImageHandler(0).init(event.getSeed());
-
-            event.getNewBiomeGens()[0] = new GenLayerBiomeGeneration(event.getSeed(),
-                    event.getOriginalBiomeGens()[0], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
-            event.getNewBiomeGens()[1] = new GenLayerBiomeIndex(event.getSeed(),
-                    event.getOriginalBiomeGens()[1], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
-            event.getNewBiomeGens()[2] = event.getNewBiomeGens()[0];
+            GenLayer[] newGens = event.getNewBiomeGens().clone();
+            newGens[0] = new GenLayerBiomeGeneration(event.getSeed(), newGens[0], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
+            newGens[1] = new GenLayerBiomeIndex(event.getSeed(), newGens[1], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
+            newGens[2] = event.getNewBiomeGens()[0];
+            event.setNewBiomeGens(newGens);
         }
     }
 
