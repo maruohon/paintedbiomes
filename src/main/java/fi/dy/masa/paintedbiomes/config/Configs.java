@@ -370,7 +370,6 @@ public class Configs
             }
 
             String registryName = entry.getKey().toString();
-            String displayName = biome.getBiomeName();
             Property prop = null;
             int biomeId = Biome.getIdForBiome(biome);
 
@@ -381,15 +380,6 @@ public class Configs
             if (configCategory.containsKey(registryName))
             {
                 prop = configCategory.get(registryName);
-                configCategory.remove(displayName);
-            }
-            // Mapping found in the config by the biome's display name
-            else if (configCategory.containsKey(displayName))
-            {
-                // Convert the old display name entry into a registry name entry, and remove the old entry
-                prop = new Property(registryName, configCategory.get(displayName).getString(), Property.Type.STRING);
-                configCategory.remove(displayName);
-                configCategory.put(registryName, prop);
             }
 
             if (prop != null)
@@ -400,7 +390,7 @@ public class Configs
                 }
                 catch (NumberFormatException e)
                 {
-                    PaintedBiomes.logger.warn("Failed to parse color value '{}' for biome '{}'", prop.getString(), displayName);
+                    PaintedBiomes.logger.warn("Failed to parse color value '{}' for biome '{}'", prop.getString(), registryName);
                 }
             }
             // No mapping found in the config, add a default mapping, so that all the existing biomes will get added to the config
@@ -427,15 +417,15 @@ public class Configs
             if (oldId != -1)
             {
                 PaintedBiomes.logger.warn("**** WARNING **** WARNING **** WARNING ****");
-                PaintedBiomes.logger.warn(String.format("The color %06X (%d), attempted to use for biome '%s' (%s), ID: %d, is already in use!",
-                        color, color, registryName, displayName, biomeId));
+                PaintedBiomes.logger.warn(String.format("The color %06X (%d), attempted to use for biome '%s' (ID: %d), is already in use!",
+                        color, color, registryName, biomeId));
                 PaintedBiomes.logger.warn("The biomes using that color are:");
 
                 for (Biome biomeTmp : ForgeRegistries.BIOMES.getValues())
                 {
                     if (biomeTmp != null && Biome.getIdForBiome(biomeTmp) == oldId)
                     {
-                        PaintedBiomes.logger.warn("Biome: '{}' ({}), ID: {}", biomeTmp.getRegistryName(), biomeTmp.getBiomeName(), oldId);
+                        PaintedBiomes.logger.warn("  Biome: '{}' (ID: {})", biomeTmp.getRegistryName(), oldId);
                     }
                 }
 
@@ -450,7 +440,7 @@ public class Configs
                 colorToBiomeMapping.addMapping(color, biomeId);
             }
 
-            prop.setComment(String.format("Biome: %s (name: %s), ID: %d (Color as int: %d)", registryName, displayName, biomeId, color));
+            prop.setComment(String.format("Biome: %s, ID: %d (Color as int: %d)", registryName, biomeId, color));
         }
     }
 
