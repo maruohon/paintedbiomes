@@ -1,6 +1,7 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
+import javax.annotation.Nullable;
 import fi.dy.masa.paintedbiomes.config.Configs;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -42,7 +43,7 @@ public class ImageHandler implements IImageReader
         HANDLERS.remove(dimension);
     }
 
-    public static void setTemplateBasePaths(File pathGlobal, File pathWorld)
+    public static void setTemplateBasePaths(File pathGlobal, @Nullable File pathWorld)
     {
         templateBasePathGlobal = pathGlobal;
         templateBasePathWorld = pathWorld;

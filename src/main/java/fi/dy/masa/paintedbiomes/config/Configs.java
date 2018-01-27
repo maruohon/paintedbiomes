@@ -5,7 +5,8 @@ import java.util.Map;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.chunk.storage.AnvilSaveConverter;
+import net.minecraft.world.storage.ISaveFormat;
+import net.minecraft.world.storage.SaveFormatOld;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
@@ -95,16 +96,20 @@ public class Configs
     {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 
-        if (server != null)
+        worldConfigDir = null;
+        worldConfigFile = null;
+
+        if (server != null && server.getFolderName() != null)
         {
-            File worldDir = new File(((AnvilSaveConverter) server.getActiveAnvilConverter()).savesDirectory, server.getFolderName());
-            worldConfigDir = new File(worldDir, Reference.MOD_ID);
-            worldConfigFile = new File(worldConfigDir, Reference.MOD_ID + ".cfg");
-        }
-        else
-        {
-            worldConfigDir = null;
-            worldConfigFile = null;
+            ISaveFormat saveConverter = server.getActiveAnvilConverter();
+
+            if (saveConverter != null && (saveConverter instanceof SaveFormatOld))
+            {
+                File savesDirectory = ((SaveFormatOld) saveConverter).savesDirectory;
+                File worldDir = new File(savesDirectory, server.getFolderName());
+                worldConfigDir = new File(worldDir, Reference.MOD_ID);
+                worldConfigFile = new File(worldConfigDir, Reference.MOD_ID + ".cfg");
+            }
         }
     }
 
