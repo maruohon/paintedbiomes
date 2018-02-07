@@ -421,7 +421,7 @@ public class Configs
                         color, color, registryName, biomeId));
                 PaintedBiomes.logger.warn("The biomes using that color are:");
 
-                for (Biome biomeTmp : ForgeRegistries.BIOMES.getValues())
+                for (Biome biomeTmp : ForgeRegistries.BIOMES.getValuesCollection())
                 {
                     if (biomeTmp != null && Biome.getIdForBiome(biomeTmp) == oldId)
                     {
