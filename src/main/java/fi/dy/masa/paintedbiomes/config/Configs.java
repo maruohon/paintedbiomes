@@ -352,7 +352,8 @@ public class Configs
     {
         ConfigCategory configCategory = conf.getCategory("ColorToBiomeMappings");
         configCategory.setComment(  "Mappings from biome's registry name to the RGB color value.\n" +
-                                    "Specified as hex values, without the leading '0x'.\n" +
+                                    "Specified in RGB order, as hexadecimal strings (RRGGBB), without the leading '0x' or '#'.\n" +
+                                    "For example 'FF0000' for red.\n" +
                                     "To find out the biome registry names, you can use for example:\n" +
                                     "1) The TellMe mod (the command '/tellme dump biomes' will write them to a file in config/tellme/)\n" +
                                     "2) The mod MiniHUD (version 0.10.0 or later) to see the registry name of the biome you are currently in");
