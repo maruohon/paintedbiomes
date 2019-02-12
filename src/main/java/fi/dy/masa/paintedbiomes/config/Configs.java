@@ -1,6 +1,7 @@
 package fi.dy.masa.paintedbiomes.config;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
@@ -33,9 +34,10 @@ public class Configs
     private File configFile;
     private boolean isMaster;
     private boolean useBGROrderInConfig;
-
+    private boolean useCustomColorMappings;
     public boolean useGenLayer;
     public int[] enabledInDimensions;
+
     public boolean overrideChunkProvider;
     public String chunkProviderType = "";
     public String chunkProviderOptions = "";
@@ -43,10 +45,10 @@ public class Configs
     public int templateAlignmentMode;
     public int templateAlignmentX;
     public int templateAlignmentZ;
+
     public String templateUndefinedAreaBiomeName = "";
     public String unpaintedAreaBiomeName = "";
     public boolean useSingleTemplateImage;
-    private boolean useCustomColorMappings;
 
     public boolean useTemplateRandomRotation;
     public boolean useTemplateRandomFlipping;
@@ -197,22 +199,30 @@ public class Configs
 
     private Configs copyFrom(Configs old)
     {
+        this.enabledInDimensions = Arrays.copyOf(old.enabledInDimensions, old.enabledInDimensions.length);
+
+        this.overrideChunkProvider      = old.overrideChunkProvider;
+        this.chunkProviderType          = old.chunkProviderType;
+        this.chunkProviderOptions       = old.chunkProviderOptions;
+
         this.templateAlignmentMode      = old.templateAlignmentMode;
         this.templateAlignmentX         = old.templateAlignmentX;
         this.templateAlignmentZ         = old.templateAlignmentZ;
+
         this.templateUndefinedAreaBiomeName = old.templateUndefinedAreaBiomeName;
         this.unpaintedAreaBiomeName         = old.unpaintedAreaBiomeName;
         this.useSingleTemplateImage     = old.useSingleTemplateImage;
-        this.useTemplateRepeating       = old.useTemplateRepeating;
+
         this.useTemplateRandomRotation  = old.useTemplateRandomRotation;
+        this.useTemplateRandomFlipping  = old.useTemplateRandomFlipping;
+        this.useAlternateTemplates      = old.useAlternateTemplates;
+        this.maxAlternateTemplates      = old.maxAlternateTemplates;
+
+        this.useTemplateRepeating       = old.useTemplateRepeating;
         this.repeatTemplatePositiveX    = old.repeatTemplatePositiveX;
         this.repeatTemplatePositiveZ    = old.repeatTemplatePositiveZ;
         this.repeatTemplateNegativeX    = old.repeatTemplateNegativeX;
         this.repeatTemplateNegativeZ    = old.repeatTemplateNegativeZ;
-        this.overrideChunkProvider      = old.overrideChunkProvider;
-        this.chunkProviderType          = old.chunkProviderType;
-        this.chunkProviderOptions       = old.chunkProviderOptions;
-        this.enabledInDimensions        = old.enabledInDimensions.clone();
 
         return this;
     }
