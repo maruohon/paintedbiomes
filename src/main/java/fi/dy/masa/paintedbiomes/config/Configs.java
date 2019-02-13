@@ -45,6 +45,7 @@ public class Configs
     public int templateAlignmentMode;
     public int templateAlignmentX;
     public int templateAlignmentZ;
+    public boolean templateAlignToWorldSpawn;
 
     public String templateUndefinedAreaBiomeName = "";
     public String unpaintedAreaBiomeName = "";
@@ -208,6 +209,7 @@ public class Configs
         this.templateAlignmentMode      = old.templateAlignmentMode;
         this.templateAlignmentX         = old.templateAlignmentX;
         this.templateAlignmentZ         = old.templateAlignmentZ;
+        this.templateAlignToWorldSpawn  = old.templateAlignToWorldSpawn;
 
         this.templateUndefinedAreaBiomeName = old.templateUndefinedAreaBiomeName;
         this.unpaintedAreaBiomeName         = old.unpaintedAreaBiomeName;
@@ -255,6 +257,10 @@ public class Configs
         prop = conf.get(category, "templateAlignmentZ", this.templateAlignmentZ);
         prop.setComment("The world Z coordinate where the selected point (templateAlignmentMode) of the template image is aligned.");
         this.templateAlignmentZ = prop.getInt();
+
+        prop = conf.get(category, "templateAlignToWorldSpawn", this.templateAlignToWorldSpawn);
+        prop.setComment("Should the template be aligned to the world spawn point,\ninstead of the templateAlignmentX and templateAlignmentZ coordinates");
+        this.templateAlignToWorldSpawn = prop.getBoolean();
 
         prop = conf.get(category, "templateUndefinedAreaBiome", this.templateUndefinedAreaBiomeName);
         prop.setComment("How to handle \"undefined\" (= completely transparent) areas within the template image area(s).\n" +

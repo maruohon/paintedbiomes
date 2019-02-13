@@ -17,44 +17,48 @@ public class ImageSingleRepeating extends ImageSingle
 
     protected BufferedImage[] templates;
 
-    public ImageSingleRepeating(int dimension, long seed, File templatePath)
+    public ImageSingleRepeating(int dimension, long seed, Configs config, File templatePath)
     {
-        super(dimension, seed, templatePath);
-
-        Configs conf = Configs.getConfig(this.dimension);
+        super(dimension, seed, config, templatePath);
 
         int repeatTemplate = 0;
-        if (conf.repeatTemplatePositiveX == 1) repeatTemplate |= POSX;
-        if (conf.repeatTemplatePositiveZ == 1) repeatTemplate |= POSZ;
-        if (conf.repeatTemplateNegativeX == 1) repeatTemplate |= NEGX;
-        if (conf.repeatTemplateNegativeZ == 1) repeatTemplate |= NEGZ;
+        if (config.repeatTemplatePositiveX == 1) repeatTemplate |= POSX;
+        if (config.repeatTemplatePositiveZ == 1) repeatTemplate |= POSZ;
+        if (config.repeatTemplateNegativeX == 1) repeatTemplate |= NEGX;
+        if (config.repeatTemplateNegativeZ == 1) repeatTemplate |= NEGZ;
 
         int repeatEdge = 0;
-        if (conf.repeatTemplatePositiveX == 2) repeatEdge |= POSX;
-        if (conf.repeatTemplatePositiveZ == 2) repeatEdge |= POSZ;
-        if (conf.repeatTemplateNegativeX == 2) repeatEdge |= NEGX;
-        if (conf.repeatTemplateNegativeZ == 2) repeatEdge |= NEGZ;
+        if (config.repeatTemplatePositiveX == 2) repeatEdge |= POSX;
+        if (config.repeatTemplatePositiveZ == 2) repeatEdge |= POSZ;
+        if (config.repeatTemplateNegativeX == 2) repeatEdge |= NEGX;
+        if (config.repeatTemplateNegativeZ == 2) repeatEdge |= NEGZ;
 
         this.repeatTemplate = repeatTemplate;
         this.repeatEdge = repeatEdge;
+    }
 
+    @Override
+    public void init()
+    {
         // The "main" template is at index 0, the alternates start from 1
         this.templates = new BufferedImage[this.maxAlternateTemplates + 1];
+
+        super.init();
     }
 
     @Override
     protected void readTemplateImage(File templatePath)
     {
         // The "main" template is at index 0, the alternates start from 1
-        this.templates[0] = this.readImageData(new File(templatePath, "biomes.png"));
-        this.imageData = this.templates[0];
+        this.imageData = this.readImageData(new File(templatePath, "biomes.png"));
+        this.templates[0] = imageData;
 
-        if (this.useAlternateTemplates == true)
+        if (this.useAlternateTemplates)
         {
             for (int i = 1; i < this.templates.length; i++)
             {
                 BufferedImage image = this.readImageData(new File(templatePath, "biomes_alt_" + i + ".png"));
-                this.templates[i] = image != null ? image : this.templates[0];
+                this.templates[i] = image != null ? image : this.imageData;
             }
         }
 
@@ -146,6 +150,15 @@ public class ImageSingleRepeating extends ImageSingle
         return area;
     }
 
+    protected void setTemplateTransformationsForBlockPos(int blockX, int blockZ)
+    {
+        // Repeated template, use a random rotation based on the relative position of the repeated template
+        int tx = (blockX - this.minX) / this.areaSizeX;
+        int tz = (blockZ - this.minZ) / this.areaSizeZ;
+
+        this.setTemplateTransformations(tx, tz);
+    }
+
     @Override
     public boolean isBiomeDefinedAt(int blockX, int blockZ)
     {
@@ -172,13 +185,10 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatTemplate != 0 && (this.repeatTemplate & area) == area)
         {
+            this.setTemplateTransformationsForBlockPos(blockX, blockZ);
+
             int areaX = ((blockX - this.minX) % this.areaSizeX + this.areaSizeX) % this.areaSizeX;
             int areaZ = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
-
-            // Repeated template, use a random rotation based on the relative position of the repeated template
-            int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
-            int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
-            this.setTemplateTransformations(tx, tz);
 
             return this.isBiomeDefinedByTemplateAt(areaX, areaZ);
         }
@@ -188,8 +198,8 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatEdge != 0 && (this.repeatEdge & area) == area)
         {
-            int areaX = blockX - this.minX;
-            int areaZ = blockZ - this.minZ;
+            int areaX;
+            int areaZ;
 
             if (blockX < this.minX)
             {
@@ -199,6 +209,10 @@ public class ImageSingleRepeating extends ImageSingle
             {
                 areaX = this.areaSizeX - 1;
             }
+            else
+            {
+                areaX = blockX - this.minX;
+            }
 
             if (blockZ < this.minZ)
             {
@@ -207,6 +221,10 @@ public class ImageSingleRepeating extends ImageSingle
             else if (blockZ > this.maxZ)
             {
                 areaZ = this.areaSizeZ - 1;
+            }
+            else
+            {
+                areaZ = blockZ - this.minZ;
             }
 
             // use a rotation based on the template alignment position
@@ -244,13 +262,10 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatTemplate != 0 && (this.repeatTemplate & area) == area)
         {
+            this.setTemplateTransformationsForBlockPos(blockX, blockZ);
+
             int areaX = ((blockX - this.minX) % this.areaSizeX + this.areaSizeX) % this.areaSizeX;
             int areaZ = ((blockZ - this.minZ) % this.areaSizeZ + this.areaSizeZ) % this.areaSizeZ;
-
-            // Repeated template, use a random rotation based on the relative position of the repeated template
-            int tx = (int)Math.floor(((float)blockX - (float)this.minX) / (float)this.areaSizeX);
-            int tz = (int)Math.floor(((float)blockZ - (float)this.minZ) / (float)this.areaSizeZ);
-            this.setTemplateTransformations(tx, tz);
 
             return this.getBiomeIdFromTemplateImage(areaX, areaZ, defaultBiomeID);
         }
@@ -260,8 +275,8 @@ public class ImageSingleRepeating extends ImageSingle
         // on one axis), or that both of the sides adjacent to the corner that the location is in, have repeating enabled.
         if (this.repeatEdge != 0 && (this.repeatEdge & area) == area)
         {
-            int areaX = blockX - this.minX;
-            int areaZ = blockZ - this.minZ;
+            int areaX;
+            int areaZ;
 
             if (blockX < this.minX)
             {
@@ -271,6 +286,10 @@ public class ImageSingleRepeating extends ImageSingle
             {
                 areaX = this.areaSizeX - 1;
             }
+            else
+            {
+                areaX = blockX - this.minX;
+            }
 
             if (blockZ < this.minZ)
             {
@@ -279,6 +298,10 @@ public class ImageSingleRepeating extends ImageSingle
             else if (blockZ > this.maxZ)
             {
                 areaZ = this.areaSizeZ - 1;
+            }
+            else
+            {
+                areaZ = blockZ - this.minZ;
             }
 
             // use a rotation based on the template alignment position

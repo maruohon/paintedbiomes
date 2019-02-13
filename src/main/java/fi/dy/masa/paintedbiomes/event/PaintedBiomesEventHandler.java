@@ -42,23 +42,28 @@ public class PaintedBiomesEventHandler
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event)
     {
-        if (event.getWorld().isRemote == false)
+        World world = event.getWorld();
+
+        if (world.isRemote == false)
         {
-            this.overrideChunkProvider(event.getWorld());
-            this.overrideBiomeProvider(event.getWorld());
+            this.onWorldLoad(world);
+            this.overrideChunkGenerator(world);
+            this.overrideBiomeProvider(world);
         }
     }
 
     @SubscribeEvent
     public void onCreateWorldSpawn(WorldEvent.CreateSpawnPosition event)
     {
+        World world = event.getWorld();
+
         // The initial world spawn position is created before the WorldEvent.Load fires, so we
         // need this event to cover that case. Otherwise a newly created world (no existing level.dat file yet)
         // will have a mess of regular terrain generation chunks near the spawn chunk...
-        if (event.getWorld().isRemote == false)
+        if (world.isRemote == false)
         {
-            this.overrideChunkProvider(event.getWorld());
-            this.overrideBiomeProvider(event.getWorld());
+            this.overrideChunkGenerator(world);
+            this.overrideBiomeProvider(world);
         }
     }
 
@@ -78,11 +83,22 @@ public class PaintedBiomesEventHandler
         {
             PaintedBiomes.logger.info("Registering Painted Biomes biome GenLayers");
             ImageHandler.getImageHandler(0).init(event.getSeed());
-            GenLayer[] newGens = event.getNewBiomeGens().clone();
-            newGens[0] = new GenLayerBiomeGeneration(event.getSeed(), newGens[0], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
-            newGens[1] = new GenLayerBiomeIndex(event.getSeed(), newGens[1], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
+            GenLayer[] oldGens = event.getNewBiomeGens();
+            GenLayer[] newGens = new GenLayer[oldGens.length];
+            newGens[0] = new GenLayerBiomeGeneration(event.getSeed(), oldGens[0], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
+            newGens[1] = new GenLayerBiomeIndex(event.getSeed(), oldGens[1], event.getWorldType(), ChunkGeneratorSettings.Factory.jsonToFactory("").build());
             newGens[2] = newGens[0];
             event.setNewBiomeGens(newGens);
+        }
+    }
+
+    private void onWorldLoad(World world)
+    {
+        ImageHandler handler = ImageHandler.getImageHandlerIfExists(world.provider.getDimension());
+
+        if (handler != null && world instanceof WorldServer)
+        {
+            handler.onWorldLoad((WorldServer) world);
         }
     }
 
@@ -129,7 +145,7 @@ public class PaintedBiomesEventHandler
         }
     }
 
-    private void overrideChunkProvider(World world)
+    private void overrideChunkGenerator(World world)
     {
         int dimension = world.provider.getDimension();
 
@@ -137,28 +153,28 @@ public class PaintedBiomesEventHandler
         {
             if (dimension == i)
             {
-                this.overrideChunkProvider(dimension, world);
+                this.overrideChunkGenerator(dimension, world);
                 break;
             }
         }
     }
 
-    private void overrideChunkProvider(int dimension, World world)
+    private void overrideChunkGenerator(int dimension, World world)
     {
         Configs conf = Configs.getConfig(dimension);
 
         if (conf.overrideChunkProvider && world instanceof WorldServer)
         {
-            IChunkGenerator newChunkProvider = this.getNewChunkProvider(world, conf.chunkProviderType, conf.chunkProviderOptions);
+            IChunkGenerator newChunkProvider = this.getNewChunkGenerator(world, conf.chunkProviderType, conf.chunkProviderOptions);
 
             if (newChunkProvider == null)
             {
-                PaintedBiomes.logger.warn("Invalid/unknown ChunkProvider type '{}'", conf.chunkProviderType);
+                PaintedBiomes.logger.warn("Invalid/unknown ChunkGenerator type '{}'", conf.chunkProviderType);
                 return;
             }
 
-            PaintedBiomes.logger.info("Attempting to override the ChunkProvider (of type {}) of dimension {} with {}",
-                    ((ChunkProviderServer)world.getChunkProvider()).chunkGenerator.getClass().getName(),
+            PaintedBiomes.logger.info("Attempting to override the ChunkGenerator (of type {}) of dimension {} with {}",
+                    ((ChunkProviderServer) world.getChunkProvider()).chunkGenerator.getClass().getName(),
                     dimension, newChunkProvider.getClass().getName());
 
             try
@@ -168,27 +184,27 @@ public class PaintedBiomesEventHandler
             }
             catch (UnableToAccessFieldException e)
             {
-                PaintedBiomes.logger.warn("Failed to override the ChunkProvider for dimension {} with {}",
+                PaintedBiomes.logger.warn("Failed to override the ChunkGenerator for dimension {} with {}",
                         dimension, newChunkProvider.getClass().getName(), e);
             }
         }
     }
 
-    private IChunkGenerator getNewChunkProvider(World world, String chunkProviderType, String generatorOptions)
+    private IChunkGenerator getNewChunkGenerator(World world, String chunkGeneratorType, String generatorOptions)
     {
-        if (chunkProviderType.equals("VANILLA_DEFAULT"))
+        if (chunkGeneratorType.equals("VANILLA_DEFAULT"))
         {
             return new ChunkGeneratorOverworld(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
         }
-        else if (chunkProviderType.equals("VANILLA_FLAT"))
+        else if (chunkGeneratorType.equals("VANILLA_FLAT"))
         {
             return new ChunkGeneratorFlat(world, world.getSeed(), world.getWorldInfo().isMapFeaturesEnabled(), generatorOptions);
         }
-        else if (chunkProviderType.equals("VANILLA_HELL"))
+        else if (chunkGeneratorType.equals("VANILLA_HELL"))
         {
             return new ChunkGeneratorHell(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed());
         }
-        else if (chunkProviderType.equals("VANILLA_END"))
+        else if (chunkGeneratorType.equals("VANILLA_END"))
         {
             return new ChunkGeneratorEnd(world, world.getWorldInfo().isMapFeaturesEnabled(), world.getSeed(), new BlockPos(100, 50, 0));
         }

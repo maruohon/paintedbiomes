@@ -2,6 +2,7 @@ package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
 import fi.dy.masa.paintedbiomes.PaintedBiomes;
+import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageRegion extends ImageBase implements IImageReader
 {
@@ -9,9 +10,9 @@ public class ImageRegion extends ImageBase implements IImageReader
     protected final int regionX;
     protected final int regionZ;
 
-    public ImageRegion(int dimension, int regionX, int regionZ, long seed, File templatePath)
+    public ImageRegion(int dimension, int regionX, int regionZ, long seed, Configs config, File templatePath)
     {
-        super(dimension, seed);
+        super(dimension, seed, config);
 
         this.regionX = regionX;
         this.regionZ = regionZ;

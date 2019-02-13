@@ -1,35 +1,83 @@
 package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
+import javax.annotation.Nullable;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 import fi.dy.masa.paintedbiomes.config.Configs;
 
 public class ImageSingle extends ImageBase implements IImageReader
 {
     protected final File templatePath;
     protected final int templateAlignmentMode;
-    protected final int templateAlignmentX;
-    protected final int templateAlignmentZ;
+    protected boolean templateAlignmentNeedsInit;
+    protected int templateAlignmentX;
+    protected int templateAlignmentZ;
 
     protected int minX;
     protected int maxX;
     protected int minZ;
     protected int maxZ;
 
-    public ImageSingle(int dimension, long seed, File templatePath)
+    public ImageSingle(int dimension, long seed, Configs config, File templatePath)
     {
-        super(dimension, seed);
+        super(dimension, seed, config);
 
-        Configs conf = Configs.getConfig(this.dimension);
-        this.templateAlignmentMode = conf.templateAlignmentMode;
-        this.templateAlignmentX = conf.templateAlignmentX;
-        this.templateAlignmentZ = conf.templateAlignmentZ;
         this.templatePath = templatePath;
+        this.templateAlignmentMode = MathHelper.clamp(config.templateAlignmentMode, 0, 4);
+
+        if (config.templateAlignToWorldSpawn)
+        {
+            this.templateAlignmentNeedsInit = true;
+            this.setTemplateAlignmentToWorldSpawn();
+        }
+        else
+        {
+            this.templateAlignmentX = config.templateAlignmentX;
+            this.templateAlignmentZ = config.templateAlignmentZ;
+        }
+
+        this.init();
+    }
+
+    protected void setTemplateAlignmentToWorldSpawn()
+    {
+        this.setTemplateAlignmentToWorldSpawn(DimensionManager.getWorld(this.dimension));
+    }
+
+    protected void setTemplateAlignmentToWorldSpawn(@Nullable WorldServer world)
+    {
+        if (world != null)
+        {
+            BlockPos spawn = world.getSpawnCoordinate();
+
+            // In vanilla just the End dimension has a spawn coordinate
+            if (spawn == null)
+            {
+                spawn = world.getSpawnPoint();
+            }
+
+            this.templateAlignmentX = spawn.getX();
+            this.templateAlignmentZ = spawn.getZ();
+            this.templateAlignmentNeedsInit = false;
+        }
     }
 
     public void init()
     {
         this.setTemplateTransformations(this.templateAlignmentX, this.templateAlignmentZ);
         this.readTemplateImage(this.templatePath);
+    }
+
+    public void onWorldLoad(WorldServer world)
+    {
+        if (this.templateAlignmentNeedsInit)
+        {
+            this.setTemplateAlignmentToWorldSpawn(world);
+            this.init();
+        }
     }
 
     protected void readTemplateImage(File templatePath)

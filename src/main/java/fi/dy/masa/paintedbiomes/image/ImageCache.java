@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import fi.dy.masa.paintedbiomes.config.Configs;
 import fi.dy.masa.paintedbiomes.util.RegionCoords;
 
 public class ImageCache
@@ -30,7 +30,8 @@ public class ImageCache
 
         if (imageRegion == null)
         {
-            imageRegion = new ImageRegion(regionCoords.dimension, regionCoords.regionX, regionCoords.regionZ, this.seed, this.templatePath);
+            Configs config = Configs.getConfig(dimension);
+            imageRegion = new ImageRegion(regionCoords.dimension, regionCoords.regionX, regionCoords.regionZ, this.seed, config, this.templatePath);
             this.imageRegions.put(regionCoords, imageRegion);
         }
 

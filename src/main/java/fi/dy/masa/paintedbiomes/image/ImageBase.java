@@ -39,18 +39,17 @@ public abstract class ImageBase implements IImageReader
     protected int templateFlip;
     protected int alternateTemplate;
 
-    public ImageBase(int dimension, long seed)
+    public ImageBase(int dimension, long seed, Configs config)
     {
         this.dimension = dimension;
         this.worldSeed = seed;
 
-        Configs conf = Configs.getConfig(this.dimension);
-        this.useAlternateTemplates = conf.useAlternateTemplates;
-        this.useTemplateFlipping = conf.useTemplateRandomFlipping;
-        this.useTemplateRotation = conf.useTemplateRandomRotation;
-        this.maxAlternateTemplates = conf.maxAlternateTemplates;
-        this.unpaintedAreaBiomeID = getBiomeIDForRegistryName(conf.unpaintedAreaBiomeName);
-        this.templateUndefinedAreaBiomeID = getBiomeIDForRegistryName(conf.templateUndefinedAreaBiomeName);
+        this.useAlternateTemplates = config.useAlternateTemplates;
+        this.useTemplateFlipping = config.useTemplateRandomFlipping;
+        this.useTemplateRotation = config.useTemplateRandomRotation;
+        this.maxAlternateTemplates = config.maxAlternateTemplates;
+        this.unpaintedAreaBiomeID = getBiomeIDForRegistryName(config.unpaintedAreaBiomeName);
+        this.templateUndefinedAreaBiomeID = getBiomeIDForRegistryName(config.templateUndefinedAreaBiomeName);
 
         RAND.setSeed(this.worldSeed);
         this.randLong1 = RAND.nextLong() / 2L * 2L + 1L;

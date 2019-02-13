@@ -2,15 +2,15 @@ package fi.dy.masa.paintedbiomes.image;
 
 import java.io.File;
 import javax.annotation.Nullable;
+import net.minecraft.world.WorldServer;
 import fi.dy.masa.paintedbiomes.config.Configs;
-import gnu.trove.iterator.TIntObjectIterator;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public class ImageHandler implements IImageReader
 {
-    private static final TIntObjectHashMap<ImageHandler> HANDLERS = new TIntObjectHashMap<ImageHandler>();
-    private ImageCache regionImageCache;
-    private ImageSingle singleImage;
+    private static final Int2ObjectOpenHashMap<ImageHandler> HANDLERS = new Int2ObjectOpenHashMap<>();
+    @Nullable private ImageCache regionImageCache;
+    @Nullable private ImageSingle singleImage;
 
     private static File templateBasePathGlobal;
     private static File templateBasePathWorld;
@@ -36,6 +36,12 @@ public class ImageHandler implements IImageReader
         }
 
         return imageHandler;
+    }
+
+    @Nullable
+    public static ImageHandler getImageHandlerIfExists(int dimension)
+    {
+        return HANDLERS.get(dimension);
     }
 
     public static void removeImageHandler(int dimension)
@@ -66,10 +72,18 @@ public class ImageHandler implements IImageReader
         }
     }
 
+    public void onWorldLoad(WorldServer world)
+    {
+        if (this.singleImage != null)
+        {
+            this.singleImage.onWorldLoad(world);
+        }
+    }
+
     public ImageHandler init(long seed)
     {
-        Configs configs = Configs.getConfig(this.dimension);
-        this.useSingleTemplateImage = configs.useSingleTemplateImage;
+        Configs config = Configs.getConfig(this.dimension);
+        this.useSingleTemplateImage = config.useSingleTemplateImage;
 
         this.createAndSetTemplateDir();
 
@@ -80,17 +94,15 @@ public class ImageHandler implements IImageReader
             this.regionImageCache = new ImageCache(seed, this.templatePath);
         }
         // Single template image mode, with some type of template repeating
-        else if (configs.useTemplateRepeating)
+        else if (config.useTemplateRepeating)
         {
-            this.singleImage = new ImageSingleRepeating(this.dimension, seed, this.templatePath);
-            this.singleImage.init();
+            this.singleImage = new ImageSingleRepeating(this.dimension, seed, config, this.templatePath);
             this.regionImageCache = null;
         }
         // Single template image mode, no repeating
         else
         {
-            this.singleImage = new ImageSingle(this.dimension, seed, this.templatePath);
-            this.singleImage.init();
+            this.singleImage = new ImageSingle(this.dimension, seed, config, this.templatePath);
             this.regionImageCache = null;
         }
 
@@ -103,16 +115,12 @@ public class ImageHandler implements IImageReader
         {
             timer = 0;
             int threshold = 30; // 5 minute timeout for non-accessed images
-            TIntObjectIterator<ImageHandler> iterator = HANDLERS.iterator();
 
-            for (int i = HANDLERS.size(); i > 0; --i)
+            for (ImageHandler handler : HANDLERS.values())
             {
-                iterator.advance();
-                ImageHandler imageHandler = iterator.value();
-
-                if (imageHandler.useSingleTemplateImage == false)
+                if (handler.useSingleTemplateImage == false)
                 {
-                    imageHandler.regionImageCache.removeOld(threshold);
+                    handler.regionImageCache.removeOld(threshold);
                 }
             }
         }
