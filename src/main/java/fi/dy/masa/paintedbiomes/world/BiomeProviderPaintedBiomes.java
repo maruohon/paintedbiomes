@@ -10,6 +10,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeCache;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import fi.dy.masa.paintedbiomes.image.ImageHandler;
@@ -17,16 +18,37 @@ import fi.dy.masa.paintedbiomes.image.ImageHandler;
 
 public class BiomeProviderPaintedBiomes extends BiomeProvider
 {
-    protected BiomeCache biomeCache;
+    protected final BiomeCache biomeCache;
+    protected final long seed;
     protected BiomeProvider parent;
     protected ImageHandler imageHandler;
+    protected boolean needsInit;
 
-    public BiomeProviderPaintedBiomes(World world, BiomeProvider biomeProviderParent, ImageHandler imageHandler)
+    public BiomeProviderPaintedBiomes(WorldInfo info, BiomeProvider biomeProviderParent, ImageHandler imageHandler)
     {
-        super(world.getWorldInfo());
+        super(info);
+
         this.parent = biomeProviderParent;
         this.imageHandler = imageHandler;
         this.biomeCache = new BiomeCache(this);
+        this.seed = info.getSeed();
+    }
+
+    public BiomeProviderPaintedBiomes(WorldInfo info)
+    {
+        this(info, new BiomeProvider(info), ImageHandler.getImageHandler(0));
+
+        this.needsInit = true; // The correct ImageHandler needs to be set later
+    }
+
+    public void init(World world)
+    {
+        if (this.needsInit)
+        {
+            this.parent = world.getBiomeProvider();
+            this.imageHandler = ImageHandler.getImageHandler(world.provider.getDimension()).init(this.seed);
+            this.needsInit = false;
+        }
     }
 
     @Override

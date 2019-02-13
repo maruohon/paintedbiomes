@@ -136,7 +136,7 @@ public class PaintedBiomesEventHandler
             // Re-initialize the ImageHandler when a world loads, to update config values etc.
             ImageHandler imageHandler = ImageHandler.getImageHandler(dimension).init(world.getSeed());
 
-            BiomeProvider newBiomeProvider = new BiomeProviderPaintedBiomes(world, world.getBiomeProvider(), imageHandler);
+            BiomeProvider newBiomeProvider = new BiomeProviderPaintedBiomes(world.getWorldInfo(), world.getBiomeProvider(), imageHandler);
             ReflectionHelper.setPrivateValue(WorldProvider.class, world.provider, newBiomeProvider, "field_76578_c", "biomeProvider");
         }
         catch (UnableToAccessFieldException e)
